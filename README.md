@@ -33,6 +33,8 @@ Author: Werner Robitza <werner.robitza@gmail.com>
 
 # Caveats
 
+- The script doesn't work on input files that have no video or no audio.
+- You need to pick a proper output file format for the codecs you choose. Use `.avi` for the FFV1 and PCM WAV defaults.
 
 # Acknowledgements
 

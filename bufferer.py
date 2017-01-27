@@ -170,6 +170,7 @@ class Bufferer:
             total_looped_samples = total_looped_samples + buf_len_samples
 
         self.loop_cmd = (", ").join(loop_cmds)
+        self.aloop_cmd = (", ").join(aloop_cmds)
         self.enable_cmd = ("+").join(enable_cmds)
 
     def set_specs(self):

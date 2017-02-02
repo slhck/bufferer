@@ -65,6 +65,7 @@ class Bufferer:
         self.dry             = arguments["--dry-run"]
         self.vcodec          = arguments["--vcodec"]
         self.acodec          = arguments["--acodec"]
+        self.verbose         = arguments["--verbose"]
 
         try:
           self.buflist = json.loads(arguments["--buflist"])
@@ -78,15 +79,14 @@ class Bufferer:
         # get info needed for processing
         self.parse_fps_samplerate()
 
-
-    @staticmethod
-    def run_command(cmd, raw=True, dry=False):
+    def run_command(self, cmd, raw=True):
         """
         Run a command directly
         """
-        if dry:
+        if self.dry or self.verbose:
             print("[cmd] " + str(cmd))
-            return
+            if self.dry:
+                return
 
         if raw:
             process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
@@ -204,7 +204,7 @@ class Bufferer:
         -an -shortest -map "[outv]" -map "[outa]" {self.trim_spec} -c:v {self.vcodec} -c:a {self.acodec} {self.output_file}
         '''.format(**locals()).replace('\n',' ').replace('  ',' ').strip()
 
-        Bufferer.run_command(cmd, dry=self.dry)
+        self.run_command(cmd, dry=self.dry)
 
 if __name__ == '__main__':
     arguments = docopt(__doc__, version='bufferer v0.1')

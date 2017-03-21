@@ -26,10 +26,11 @@ Bufferer
 Inserts fake rebuffering events into video
 
 Usage:
-    bufferer.py [-hfn] -i <input> -o <output>
+    bufferer    [-hfn] -i <input> -o <output>
                 [-b <buflist>] [-v <vcodec>] [-a <acodec>]
-                [-s <spinner>] [-p <speed>] [-t <trim>]
-                [--verbose]
+                [-s <spinner>] [-p <speed>] [-t <trim>] [-r <brightness>]
+                [-l <blur>]
+                [--verbose] [--version]
 
     -h --help                     show help message
     -f --force                    force overwrite output files
@@ -43,14 +44,18 @@ Usage:
     -s --spinner <spinner>        path to spinner animated file or video [default: spinners/spinner-256-white.png]
     -p --speed <speed>            speed of the spinner, rounded to integer [default: 2]
     -t --trim <trim>              trim video to length in seconds or "HH:MM:SS.msec" format
+    -r --brightness <brightness>  change brightness during buffering, use values between -1.0 and 1.0 [default: 0.0]
+    -l --blur <blur>              change blur during buffering, value specifies kernel size [default: 5]
     --verbose                     show verbose output
+    --version                     show version
 """
 
 from docopt import docopt
-import os
-import subprocess
 import json
+import os
+import pkg_resources
 import re
+import subprocess
 
 class Bufferer:
 
@@ -66,6 +71,8 @@ class Bufferer:
         self.vcodec          = arguments["--vcodec"]
         self.acodec          = arguments["--acodec"]
         self.verbose         = arguments["--verbose"]
+        self.brightness      = arguments["--brightness"]
+        self.blur            = arguments["--blur"]
 
         try:
           self.buflist = json.loads(arguments["--buflist"])
@@ -96,10 +103,10 @@ class Bufferer:
         stdout, stderr = process.communicate()
 
         if process.returncode == 0:
-            return stdout + stderr
+            return stdout.decode('utf-8') + stderr.decode('utf-8')
         else:
             print("[error] running command: {}".format(cmd))
-            print(str(stderr))
+            print(stderr.decode('utf-8'))
 
 
     def parse_fps_samplerate(self):
@@ -109,7 +116,7 @@ class Bufferer:
 
         p = subprocess.Popen(['ffmpeg', '-i', self.input_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = p.communicate()
-        output = stderr
+        output = stderr.decode('utf-8')
         video_regex = re.compile(r'Video: (.*)')
         audio_regex = re.compile(r'Audio: (.*)')
 
@@ -198,21 +205,34 @@ class Bufferer:
         ffmpeg {self.overwrite_spec} -i {self.input_file}
         -filter_complex "[0:v]{self.loop_cmd}[stallvid];
         [0:a]{self.aloop_cmd},volume=0:enable='{self.enable_cmd}'[outa];
-        [stallvid]avgblur=5:enable='{self.enable_cmd}', eq=brightness=-0.3:enable='{self.enable_cmd}'[stallvidblur]; \
+        [stallvid]avgblur={self.blur}:enable='{self.enable_cmd}', eq=brightness={self.brightness}:enable='{self.enable_cmd}'[stallvidblur]; \
         movie=filename={self.spinner}:loop=0, setpts=N/(FRAME_RATE*TB)*{self.speed}[spinner];
         [stallvidblur][spinner]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2:shortest=1:enable='{self.enable_cmd}'[outv]"
         -shortest -map "[outv]" -map "[outa]" {self.trim_spec} -c:v {self.vcodec} -c:a {self.acodec} {self.output_file}
         '''.format(**locals()).replace('\n',' ').replace('  ',' ').strip()
 
-        self.run_command(cmd, dry=self.dry)
+        if self.verbose:
+            print("[info] running ffmpeg command, this may take a while")
 
-if __name__ == '__main__':
-    arguments = docopt(__doc__, version='bufferer v0.1')
+        self.run_command(cmd)
+
+def main():
+    arguments = docopt(__doc__, version="0.1")
 
     if not os.path.isfile(arguments["--input"]):
         raise IOError("Input file does not exist")
 
-    b = Bufferer(arguments)
-    b.insert_buf_audiovisual()
+    if not arguments["--buflist"]:
+        raise StandardError("No buffering list given, please specify --buflist")
 
-    print "Output written to " + b.output_file
+    b = Bufferer(arguments)
+    try:
+        b.insert_buf_audiovisual()
+    except Exception as e:
+        raise StandardError("Error while converting: " + e)
+
+    if arguments["--verbose"]:
+        print("Output written to " + b.output_file)
+
+if __name__ == '__main__':
+    main()

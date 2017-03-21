@@ -4,13 +4,27 @@ Inserts fake rebuffering events into video.
 
 Author: Werner Robitza <werner.robitza@gmail.com>
 
+# Requirements
+
+- Python
+- FFmpeg:
+    - download a static build from [their website](http://ffmpeg.org/download.html))
+    - put the `ffmpeg` executable in your `$PATH`
+
+# Installation
+
+    pip install bufferer
+
+Or clone this repository, then run the tool with `python -m bufferer`.
+
 # Usage
 
-    bufferer.py [-hfn] -i <input> -o <output>
+    bufferer    [-hfn] -i <input> -o <output>
                 [-b <buflist>] [-v <vcodec>] [-a <acodec>]
-                [-s <spinner>] [-p <speed>] [-t <trim>]
-                [--verbose]
-    
+                [-s <spinner>] [-p <speed>] [-t <trim>] [-r <brightness>]
+                [-l <blur>]
+                [--verbose] [--version]
+
     -h --help                     show help message
     -f --force                    force overwrite output files
     -n --dry-run                  only print final command, do not run
@@ -23,13 +37,10 @@ Author: Werner Robitza <werner.robitza@gmail.com>
     -s --spinner <spinner>        path to spinner animated file or video [default: spinners/spinner-256-white.png]
     -p --speed <speed>            speed of the spinner, rounded to integer [default: 2]
     -t --trim <trim>              trim video to length in seconds or "HH:MM:SS.msec" format
+    -r --brightness <brightness>  change brightness during buffering, use values between -1.0 and 1.0 [default: 0.0]
+    -l --blur <blur>              change blur during buffering, value specifies kernel size [default: 5]
     --verbose                     show verbose output
-
-# Requirements
-
-- Python 2.7
-- docopt (`pip install docopt`)
-- FFmpeg (download a static build from [their website](http://ffmpeg.org/download.html))
+    --version                     show version
 
 # Caveats
 
@@ -62,7 +73,7 @@ To generate AV sync samples:
 
 # License
 
-Copyright (c) 2017 Werner Robitza
+bufferer, Copyright (c) 2017 Werner Robitza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 

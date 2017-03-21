@@ -201,7 +201,7 @@ class Bufferer:
         [stallvid]avgblur=5:enable='{self.enable_cmd}', eq=brightness=-0.3:enable='{self.enable_cmd}'[stallvidblur]; \
         movie=filename={self.spinner}:loop=0, setpts=N/(FRAME_RATE*TB)*{self.speed}[spinner];
         [stallvidblur][spinner]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2:shortest=1:enable='{self.enable_cmd}'[outv]"
-        -an -shortest -map "[outv]" -map "[outa]" {self.trim_spec} -c:v {self.vcodec} -c:a {self.acodec} {self.output_file}
+        -shortest -map "[outv]" -map "[outa]" {self.trim_spec} -c:v {self.vcodec} -c:a {self.acodec} {self.output_file}
         '''.format(**locals()).replace('\n',' ').replace('  ',' ').strip()
 
         self.run_command(cmd, dry=self.dry)

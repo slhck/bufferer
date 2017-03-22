@@ -21,7 +21,7 @@ except ImportError:
 
 setup(
     name='bufferer',
-    version='0.1',
+    version='0.2',
     description='Insert fake buffering events into video files.',
     long_description=long_description,
     url='https://github.com/slhck/bufferer',
@@ -42,7 +42,6 @@ setup(
     ],
     packages=['bufferer'],
     install_requires=['docopt'],
-
     entry_points={
         'console_scripts': [
             'bufferer=bufferer.__main__:main',

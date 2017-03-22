@@ -217,7 +217,7 @@ class Bufferer:
         self.run_command(cmd)
 
 def main():
-    arguments = docopt(__doc__, version="0.1")
+    arguments = docopt(__doc__, version="0.2")
 
     if not os.path.isfile(arguments["--input"]):
         raise IOError("Input file does not exist")

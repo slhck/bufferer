@@ -26,8 +26,8 @@ Bufferer
 Inserts fake rebuffering events into video
 
 Usage:
-    bufferer    [-hfn] -i <input> -o <output>
-                [-b <buflist>] [-v <vcodec>] [-a <acodec>]
+    bufferer    [-hfn] -i <input> -b <buflist> -o <output>
+                [-v <vcodec>] [-a <acodec>]
                 [-s <spinner>] [-p <speed>] [-t <trim>] [-r <brightness>]
                 [-l <blur>]
                 [--verbose] [--version]
@@ -36,9 +36,9 @@ Usage:
     -f --force                    force overwrite output files
     -n --dry-run                  only print final command, do not run
     -i --input <input>            input video file
-    -o --output <output>          output video file
     -b --buflist <buflist>        list of buffering events in format "[[x1,y1], [x2,y2],...]" or
                                   "[x1,y1], [x2,y2], ..." where x = position of event in seconds, y = duration of event
+    -o --output <output>          output video file
     -v --vcodec <vcodec>          video encoder to use (see `ffmpeg -encoders`) [default: ffv1]
     -a --acodec <acodec>          audio encoder to use (see `ffmpeg -encoders`) [default: pcm_s16le]
     -s --spinner <spinner>        path to spinner animated file or video [default: spinners/spinner-256-white.png]
@@ -76,6 +76,8 @@ class Bufferer:
 
         try:
           self.buflist = json.loads(arguments["--buflist"])
+          if not isinstance(self.buflist[0], list):
+            self.buflist = [self.buflist]
         except Exception as e:
             buflist_mod = "[" + arguments["--buflist"] + "]"
             try:
@@ -83,8 +85,16 @@ class Bufferer:
             except Exception as e:
                 raise StandardError("Buffering list parameter not properly formatted. Use a list like [[0, 1], [5, 10]]")
 
+        # presence of input streams
+        self.has_video = False
+        self.has_audio = False
+
+        # video / audio attributes
+        self.fps        = None
+        self.samplerate = None
+
         # get info needed for processing
-        self.parse_fps_samplerate()
+        self.parse_input()
 
     def run_command(self, cmd, raw=True):
         """
@@ -109,9 +119,9 @@ class Bufferer:
             print(stderr.decode('utf-8'))
 
 
-    def parse_fps_samplerate(self):
+    def parse_input(self):
         """
-        Get FPS as a float from the input file using ffmpeg
+        Parse various info from the input file
         """
 
         p = subprocess.Popen(['ffmpeg', '-i', self.input_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -121,6 +131,7 @@ class Bufferer:
         audio_regex = re.compile(r'Audio: (.*)')
 
         if video_regex.search(output):
+            self.has_video = True
             video_line = video_regex.search(output).group(1)
             fps_pattern = re.compile(r'.*, ([0-9.]+) fps,.*')
             fps_match = fps_pattern.search(video_line)
@@ -128,60 +139,74 @@ class Bufferer:
                 self.fps = float(fps_match.group(1))
 
         if audio_regex.search(output):
+            self.has_audio = True
             audio_line = audio_regex.search(output).group(1)
             hz_pattern = re.compile(r'.*, ([0-9]+) Hz,.*')
             hz_match = hz_pattern.search(audio_line)
             if hz_match:
                 self.samplerate = float(hz_match.group(1))
 
-        if not self.fps or not self.samplerate:
+        if not (self.has_audio or self.has_video):
+            raise StandardError("[error] file has no video or audio stream")
+
+        if not (self.fps or self.samplerate):
             raise StandardError("[error] could not find video stream or detect fps / samplerate")
 
 
     def set_loop_cmds(self):
-        loop_cmds            = []
-        aloop_cmds           = []
-        enable_cmds          = []
+        """
+        Construct the looping commands
+        """
 
-        total_looped         = 0
-        total_enable         = 0
-        total_looped_samples = 0
+        vloop_cmds   = []
+        aloop_cmds   = []
+        enable_cmds  = []
+
+        total_vlooped  = 0
+        total_alooped  = 0
+        total_enable   = 0
+
 
         for buf_event in self.buflist:
             buf_pos, buf_len = buf_event
 
-            # offset buf_position by the total number of looped frames
-            buf_pos_frames = int(self.fps * buf_pos) + total_looped
-            buf_len_frames = int(self.fps * buf_len)
+            if self.has_video:
+                # offset buf_position by the total number of looped frames
+                buf_pos_frames = int(self.fps * buf_pos) + total_vlooped
+                buf_len_frames = int(self.fps * buf_len)
 
-            # offset buf_position by the total number of looped samples
-            buf_pos_samples = int(self.samplerate * buf_pos) + total_looped_samples
-            buf_len_samples = int(self.samplerate * buf_len)
+                loop_cmd = "loop=loop={buf_len_frames}:size=1:start={buf_pos_frames},\
+                setpts=N/FRAME_RATE/TB".format(**locals())
+                vloop_cmds.append(loop_cmd)
 
-            loop_cmd = "loop=loop={buf_len_frames}:size=1:start={buf_pos_frames},\
-            setpts=N/FRAME_RATE/TB".format(**locals())
-            loop_cmds.append(loop_cmd)
+                total_vlooped += buf_len_frames
 
-            aloop_cmd = "aloop=loop={buf_len_samples}:size=1:start={buf_pos_samples},\
-            asetpts=N/SAMPLE_RATE/TB".format(**locals())
-            aloop_cmds.append(aloop_cmd)
+            if self.has_audio:
+                # offset buf_position by the total number of looped samples
+                buf_pos_samples = int(self.samplerate * buf_pos) + total_alooped
+                buf_len_samples = int(self.samplerate * buf_len)
+
+                aloop_cmd = "aloop=loop={buf_len_samples}:size=1:start={buf_pos_samples},asetpts=N/SAMPLE_RATE/TB".format(**locals())
+                aloop_cmds.append(aloop_cmd)
+
+                total_alooped += buf_len_samples
 
             buf_pos_enable = buf_pos + total_enable
             buf_len_enable = buf_pos_enable + buf_len
             enable_cmd = "between(t,{buf_pos_enable},{buf_len_enable})".format(**locals())
             enable_cmds.append(enable_cmd)
 
-            total_looped = total_looped + buf_len_frames
             total_enable = total_enable + buf_len
 
-            total_looped_samples = total_looped_samples + buf_len_samples
-
-        self.loop_cmd = (", ").join(loop_cmds)
+        self.loop_cmd = (", ").join(vloop_cmds)
         self.aloop_cmd = (", ").join(aloop_cmds)
         self.enable_cmd = ("+").join(enable_cmds)
 
     def set_specs(self):
-        # various ffmpeg options
+        """
+        set various ffmpeg options
+        """
+
         if self.force_overwrite:
             self.overwrite_spec = "-y"
         else:
@@ -201,15 +226,37 @@ class Bufferer:
         self.set_loop_cmds()
         self.set_specs()
 
+        filters = []
+        maps = []
+        codecs = []
+
+        if self.has_audio:
+            afilter = "[0:a]{self.aloop_cmd},volume=0:enable='{self.enable_cmd}'[outa]".format(**locals())
+            filters.append(afilter)
+            maps.append('-map "[outa]"')
+            codecs.append("-c:a " + self.acodec)
+
+        if self.has_video:
+            vfilter = '''
+            [0:v]{self.loop_cmd}[stallvid];
+            [stallvid]avgblur={self.blur}:enable='{self.enable_cmd}', eq=brightness={self.brightness}:enable='{self.enable_cmd}'[stallvidblur];
+            movie=filename={self.spinner}:loop=0, setpts=N/(FRAME_RATE*TB)*{self.speed}[spinner];
+            [stallvidblur][spinner]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2:shortest=1:enable='{self.enable_cmd}'[outv]
+            '''.format(**locals())
+            filters.append(vfilter)
+            maps.append('-map "[outv]"')
+            codecs.append("-c:v " + self.vcodec)
+
+        filters = ";".join(filters)
+        filters = (" ").join(filters.split()) # remove multiple spaces
+
+        maps   = " ".join(maps)
+        codecs = " ".join(codecs)
+
         cmd = '''
-        ffmpeg {self.overwrite_spec} -i {self.input_file}
-        -filter_complex "[0:v]{self.loop_cmd}[stallvid];
-        [0:a]{self.aloop_cmd},volume=0:enable='{self.enable_cmd}'[outa];
-        [stallvid]avgblur={self.blur}:enable='{self.enable_cmd}', eq=brightness={self.brightness}:enable='{self.enable_cmd}'[stallvidblur]; \
-        movie=filename={self.spinner}:loop=0, setpts=N/(FRAME_RATE*TB)*{self.speed}[spinner];
-        [stallvidblur][spinner]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2:shortest=1:enable='{self.enable_cmd}'[outv]"
-        -shortest -map "[outv]" -map "[outa]" {self.trim_spec} -c:v {self.vcodec} -c:a {self.acodec} {self.output_file}
-        '''.format(**locals()).replace('\n',' ').replace('  ',' ').strip()
+        ffmpeg -nostdin {self.overwrite_spec} -i "{self.input_file}"
+        -filter_complex "{filters}" -shortest {maps} {self.trim_spec} {codecs} "{self.output_file}"
+        '''.format(**locals()).replace('\n',' ').strip()
 
         if self.verbose:
             print("[info] running ffmpeg command, this may take a while")
@@ -226,10 +273,10 @@ def main():
         raise StandardError("No buffering list given, please specify --buflist")
 
     b = Bufferer(arguments)
-    try:
-        b.insert_buf_audiovisual()
-    except Exception as e:
-        raise StandardError("Error while converting: " + e)
+    #try:
+    b.insert_buf_audiovisual()
+    #except Exception as e:
+    #    raise StandardError("Error while converting: " + e)
 
     if arguments["--verbose"]:
         print("Output written to " + b.output_file)

@@ -19,8 +19,8 @@ Or clone this repository, then run the tool with `python -m bufferer`.
 
 # Usage
 
-    bufferer    [-hfn] -i <input> -o <output>
-                [-b <buflist>] [-v <vcodec>] [-a <acodec>]
+    bufferer    [-hfn] -i <input> -b <buflist> -o <output>
+                [-v <vcodec>] [-a <acodec>]
                 [-s <spinner>] [-p <speed>] [-t <trim>] [-r <brightness>]
                 [-l <blur>]
                 [--verbose] [--version]
@@ -29,9 +29,9 @@ Or clone this repository, then run the tool with `python -m bufferer`.
     -f --force                    force overwrite output files
     -n --dry-run                  only print final command, do not run
     -i --input <input>            input video file
-    -o --output <output>          output video file
     -b --buflist <buflist>        list of buffering events in format "[[x1,y1], [x2,y2],...]" or
                                   "[x1,y1], [x2,y2], ..." where x = position of event in seconds, y = duration of event
+    -o --output <output>          output video file
     -v --vcodec <vcodec>          video encoder to use (see `ffmpeg -encoders`) [default: ffv1]
     -a --acodec <acodec>          audio encoder to use (see `ffmpeg -encoders`) [default: pcm_s16le]
     -s --spinner <spinner>        path to spinner animated file or video [default: spinners/spinner-256-white.png]

@@ -21,7 +21,7 @@ except ImportError:
 
 setup(
     name='bufferer',
-    version='0.2',
+    version='0.3',
     description='Insert fake buffering events into video files.',
     long_description=long_description,
     url='https://github.com/slhck/bufferer',

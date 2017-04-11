@@ -21,7 +21,7 @@
 # SOFTWARE.
 
 """
-Bufferer v0.3.1
+Bufferer v0.3.2
 
 Inserts fake rebuffering events into video
 
@@ -56,6 +56,8 @@ import os
 import pkg_resources
 import re
 import subprocess
+
+from . import __version__
 
 class Bufferer:
 
@@ -264,7 +266,7 @@ class Bufferer:
         self.run_command(cmd)
 
 def main():
-    arguments = docopt(__doc__, version="0.3.1")
+    arguments = docopt(__doc__, version=str(__version__))
 
     if not os.path.isfile(arguments["--input"]):
         raise IOError("Input file does not exist")

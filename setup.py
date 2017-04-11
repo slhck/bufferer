@@ -19,9 +19,11 @@ try:
 except ImportError:
     print("pypandoc module not found, could not convert Markdown to RST")
 
+import bufferer
+
 setup(
     name='bufferer',
-    version='0.3.1',
+    version=bufferer.__version__,
     description='Insert fake buffering events into video files.',
     long_description=long_description,
     url='https://github.com/slhck/bufferer',

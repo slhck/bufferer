@@ -1,5 +1,9 @@
 # Changelog
 
+## 2017-04-11, v0.3.2
+
+- Add `__version__` attribute
+
 ## 2017-04-11, v0.3.1
 
 - Syntax error fixed

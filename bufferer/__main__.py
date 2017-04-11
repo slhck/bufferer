@@ -21,7 +21,7 @@
 # SOFTWARE.
 
 """
-Bufferer v0.3
+Bufferer v0.3.1
 
 Inserts fake rebuffering events into video
 
@@ -264,7 +264,7 @@ class Bufferer:
         self.run_command(cmd)
 
 def main():
-    arguments = docopt(__doc__, version="0.3")
+    arguments = docopt(__doc__, version="0.3.1")
 
     if not os.path.isfile(arguments["--input"]):
         raise IOError("Input file does not exist")
@@ -274,7 +274,7 @@ def main():
 
     b = Bufferer(arguments)
     try:
-    b.insert_buf_audiovisual()
+        b.insert_buf_audiovisual()
     except Exception as e:
         raise StandardError("Error while converting: " + e)
 

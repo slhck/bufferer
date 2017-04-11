@@ -1,5 +1,9 @@
 # Changelog
 
+## 2017-04-11, v0.3.1
+
+- Syntax error fixed
+
 ## 2017-04-08, v0.3
 
 - Detect presence of video and audio, apply filters accordingly

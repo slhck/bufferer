@@ -21,13 +21,14 @@
 # SOFTWARE.
 
 """
-Bufferer v0.3.2
+Bufferer v0.4
 
 Inserts fake rebuffering events into video
 
 Usage:
     bufferer    [-hfn] -i <input> -b <buflist> -o <output>
                 [-v <vcodec>] [-a <acodec>]
+                [-x <pixfmt>]
                 [-s <spinner>] [-p <speed>] [-t <trim>] [-r <brightness>]
                 [-l <blur>]
                 [--verbose] [--version]
@@ -41,6 +42,7 @@ Usage:
     -o --output <output>          output video file
     -v --vcodec <vcodec>          video encoder to use (see `ffmpeg -encoders`) [default: ffv1]
     -a --acodec <acodec>          audio encoder to use (see `ffmpeg -encoders`) [default: pcm_s16le]
+    -x --pixfmt <pixfmt>          set pixel format for output [default: yuv420p]
     -s --spinner <spinner>        path to spinner animated file or video [default: spinners/spinner-256-white.png]
     -p --speed <speed>            speed of the spinner, rounded to integer [default: 2]
     -t --trim <trim>              trim video to length in seconds or "HH:MM:SS.msec" format
@@ -72,6 +74,7 @@ class Bufferer:
         self.dry             = arguments["--dry-run"]
         self.vcodec          = arguments["--vcodec"]
         self.acodec          = arguments["--acodec"]
+        self.pixfmt          = arguments["--pixfmt"]
         self.verbose         = arguments["--verbose"]
         self.brightness      = arguments["--brightness"]
         self.blur            = arguments["--blur"]
@@ -248,6 +251,7 @@ class Bufferer:
             filters.append(vfilter)
             maps.append('-map "[outv]"')
             codecs.append("-c:v " + self.vcodec)
+            codecs.append("-pix_fmt " + self.pixfmt)
 
         filters = ";".join(filters)
         filters = (" ").join(filters.split()) # remove multiple spaces

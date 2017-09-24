@@ -235,12 +235,6 @@ class Bufferer:
         maps = []
         codecs = []
 
-        if self.has_audio:
-            afilter = "[0:a]{self.aloop_cmd},volume=0:enable='{self.enable_cmd}'[outa]".format(**locals())
-            filters.append(afilter)
-            maps.append('-map "[outa]"')
-            codecs.append("-c:a " + self.acodec)
-
         if self.has_video:
             vfilter = '''
             [0:v]{self.loop_cmd}[stallvid];
@@ -252,6 +246,12 @@ class Bufferer:
             maps.append('-map "[outv]"')
             codecs.append("-c:v " + self.vcodec)
             codecs.append("-pix_fmt " + self.pixfmt)
+
+        if self.has_audio:
+            afilter = "[0:a]{self.aloop_cmd},volume=0:enable='{self.enable_cmd}'[outa]".format(**locals())
+            filters.append(afilter)
+            maps.append('-map "[outa]"')
+            codecs.append("-c:a " + self.acodec)
 
         filters = ";".join(filters)
         filters = (" ").join(filters.split()) # remove multiple spaces

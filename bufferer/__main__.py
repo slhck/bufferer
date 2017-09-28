@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Copyright (c) 2017 Werner Robitza
 #
@@ -21,7 +21,7 @@
 # SOFTWARE.
 
 """
-Bufferer v0.4.1
+Bufferer v0.4.2
 
 Inserts fake rebuffering events into video
 
@@ -55,11 +55,11 @@ Usage:
 from docopt import docopt
 import json
 import os
-import pkg_resources
 import re
 import subprocess
 
 from . import __version__
+
 
 class Bufferer:
 
@@ -88,7 +88,7 @@ class Bufferer:
             try:
                 self.buflist = json.loads(buflist_mod)
             except Exception as e:
-                raise StandardError("Buffering list parameter not properly formatted. Use a list like [[0, 1], [5, 10]]")
+                raise Exception("Buffering list parameter not properly formatted. Use a list like [[0, 1], [5, 10]]")
 
         # presence of input streams
         self.has_video = False
@@ -123,7 +123,6 @@ class Bufferer:
             print("[error] running command: {}".format(cmd))
             print(stderr.decode('utf-8'))
 
-
     def parse_input(self):
         """
         Parse various info from the input file
@@ -152,11 +151,10 @@ class Bufferer:
                 self.samplerate = float(hz_match.group(1))
 
         if not (self.has_audio or self.has_video):
-            raise StandardError("[error] file has no video or audio stream")
+            raise Exception("[error] file has no video or audio stream")
 
         if not (self.fps or self.samplerate):
-            raise StandardError("[error] could not find video stream or detect fps / samplerate")
-
+            raise Exception("[error] could not find video stream or detect fps / samplerate")
 
     def set_loop_cmds(self):
         """
@@ -170,7 +168,6 @@ class Bufferer:
         total_vlooped  = 0
         total_alooped  = 0
         total_enable   = 0
-
 
         for buf_event in self.buflist:
             buf_pos, buf_len = buf_event
@@ -269,6 +266,7 @@ class Bufferer:
 
         self.run_command(cmd)
 
+
 def main():
     arguments = docopt(__doc__, version=str(__version__))
 
@@ -276,16 +274,17 @@ def main():
         raise IOError("Input file does not exist")
 
     if not arguments["--buflist"]:
-        raise StandardError("No buffering list given, please specify --buflist")
+        raise Exception("No buffering list given, please specify --buflist")
 
     b = Bufferer(arguments)
     try:
         b.insert_buf_audiovisual()
     except Exception as e:
-        raise StandardError("Error while converting: " + e)
+        raise Exception("Error while converting: " + e)
 
     if arguments["--verbose"]:
         print("Output written to " + b.output_file)
+
 
 if __name__ == '__main__':
     main()

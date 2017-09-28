@@ -1,5 +1,10 @@
 # Changelog
 
+## 2017-09-28, v0.4.2
+
+- Minor improvements
+- Python3 support
+
 ## 2017-04-11, v0.3.2
 
 - Add `__version__` attribute

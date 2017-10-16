@@ -280,7 +280,7 @@ def main():
     try:
         b.insert_buf_audiovisual()
     except Exception as e:
-        raise Exception("Error while converting: " + e)
+        raise Exception("Error while converting: " + str(e))
 
     if arguments["--verbose"]:
         print("Output written to " + b.output_file)

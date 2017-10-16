@@ -21,7 +21,7 @@
 # SOFTWARE.
 
 """
-Bufferer v0.4.2
+Bufferer v0.4.3
 
 Inserts fake rebuffering events into video
 
@@ -65,37 +65,38 @@ class Bufferer:
 
     def __init__(self, arguments):
         # assign arguments from commandline
-        self.input_file      = arguments["--input"]
-        self.output_file     = arguments["--output"]
-        self.spinner         = arguments["--spinner"]
-        self.speed           = int(arguments["--speed"])
-        self.trim            = arguments["--trim"]
+        self.input_file = arguments["--input"]
+        self.output_file = arguments["--output"]
+        self.spinner = arguments["--spinner"]
+        self.speed = int(arguments["--speed"])
+        self.trim = arguments["--trim"]
         self.force_overwrite = arguments["--force"]
-        self.dry             = arguments["--dry-run"]
-        self.vcodec          = arguments["--vcodec"]
-        self.acodec          = arguments["--acodec"]
-        self.pixfmt          = arguments["--pixfmt"]
-        self.verbose         = arguments["--verbose"]
-        self.brightness      = arguments["--brightness"]
-        self.blur            = arguments["--blur"]
+        self.dry = arguments["--dry-run"]
+        self.vcodec = arguments["--vcodec"]
+        self.acodec = arguments["--acodec"]
+        self.pixfmt = arguments["--pixfmt"]
+        self.verbose = arguments["--verbose"]
+        self.brightness = arguments["--brightness"]
+        self.blur = arguments["--blur"]
 
         try:
-          self.buflist = json.loads(arguments["--buflist"])
-          if not isinstance(self.buflist[0], list):
-            self.buflist = [self.buflist]
+            self.buflist = json.loads(arguments["--buflist"])
+            if not isinstance(self.buflist[0], list):
+                self.buflist = [self.buflist]
         except Exception as e:
             buflist_mod = "[" + arguments["--buflist"] + "]"
             try:
                 self.buflist = json.loads(buflist_mod)
             except Exception as e:
-                raise Exception("Buffering list parameter not properly formatted. Use a list like [[0, 1], [5, 10]]")
+                raise Exception(
+                    "Buffering list parameter not properly formatted. Use a list like [[0, 1], [5, 10]]")
 
         # presence of input streams
         self.has_video = False
         self.has_audio = False
 
         # video / audio attributes
-        self.fps        = None
+        self.fps = None
         self.samplerate = None
 
         # get info needed for processing
@@ -111,9 +112,11 @@ class Bufferer:
                 return
 
         if raw:
-            process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            process = subprocess.Popen(
+                cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         else:
-            process = subprocess.Popen(cmd.split(" "), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            process = subprocess.Popen(
+                cmd.split(" "), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         stdout, stderr = process.communicate()
 
@@ -161,13 +164,13 @@ class Bufferer:
         Construct the looping commands
         """
 
-        vloop_cmds   = []
-        aloop_cmds   = []
-        enable_cmds  = []
+        vloop_cmds = []
+        aloop_cmds = []
+        enable_cmds = []
 
-        total_vlooped  = 0
-        total_alooped  = 0
-        total_enable   = 0
+        total_vlooped = 0
+        total_alooped = 0
+        total_enable = 0
 
         for buf_event in self.buflist:
             buf_pos, buf_len = buf_event
@@ -185,7 +188,8 @@ class Bufferer:
 
             if self.has_audio:
                 # offset buf_position by the total number of looped samples
-                buf_pos_samples = int(self.samplerate * buf_pos) + total_alooped
+                buf_pos_samples = int(
+                    self.samplerate * buf_pos) + total_alooped
                 buf_len_samples = int(self.samplerate * buf_len)
 
                 aloop_cmd = "aloop=loop={buf_len_samples}:size=1:start={buf_pos_samples},asetpts=N/SAMPLE_RATE/TB".format(**locals())
@@ -195,7 +199,8 @@ class Bufferer:
 
             buf_pos_enable = buf_pos + total_enable
             buf_len_enable = buf_pos_enable + buf_len
-            enable_cmd = "between(t,{buf_pos_enable},{buf_len_enable})".format(**locals())
+            enable_cmd = "between(t,{buf_pos_enable},{buf_len_enable})".format(
+                **locals())
             enable_cmds.append(enable_cmd)
 
             total_enable = total_enable + buf_len
@@ -251,15 +256,15 @@ class Bufferer:
             codecs.append("-c:a " + self.acodec)
 
         filters = ";".join(filters)
-        filters = (" ").join(filters.split()) # remove multiple spaces
+        filters = (" ").join(filters.split())  # remove multiple spaces
 
-        maps   = " ".join(maps)
+        maps = " ".join(maps)
         codecs = " ".join(codecs)
 
         cmd = '''
         ffmpeg -nostdin {self.overwrite_spec} -i "{self.input_file}"
         -filter_complex "{filters}" -shortest {maps} {self.trim_spec} {codecs} "{self.output_file}"
-        '''.format(**locals()).replace('\n',' ').strip()
+        '''.format(**locals()).replace('\n', ' ').strip()
 
         if self.verbose:
             print("[info] running ffmpeg command, this may take a while")

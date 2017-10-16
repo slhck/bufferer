@@ -1,5 +1,10 @@
 # Changelog
 
+## 2017-10-16, v0.4.3
+
+- Code style
+- Minor bug in printing exception fixed
+
 ## 2017-09-28, v0.4.2
 
 - Minor improvements

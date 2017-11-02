@@ -1,5 +1,9 @@
 # Changelog
 
+## 2017-11-02, v0.5
+
+- Allow disabling spinner
+
 ## 2017-10-16, v0.4.3
 
 - Code style

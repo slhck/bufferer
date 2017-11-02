@@ -21,15 +21,17 @@
 # SOFTWARE.
 
 """
-Bufferer v0.4.3
+Bufferer v0.5
 
 Inserts fake rebuffering events into video
 
 Usage:
-    bufferer    [-hfn] -i <input> -b <buflist> -o <output>
+    bufferer    [-hfne] -i <input> -b <buflist> -o <output>
                 [-v <vcodec>] [-a <acodec>]
                 [-x <pixfmt>]
-                [-s <spinner>] [-p <speed>] [-t <trim>] [-r <brightness>]
+                [-s <spinner>] [--disable-spinner] [-p <speed>]
+                [-t <trim>]
+                [-r <brightness>]
                 [-l <blur>]
                 [--verbose] [--version]
 
@@ -44,6 +46,7 @@ Usage:
     -a --acodec <acodec>          audio encoder to use (see `ffmpeg -encoders`) [default: pcm_s16le]
     -x --pixfmt <pixfmt>          set pixel format for output [default: yuv420p]
     -s --spinner <spinner>        path to spinner animated file or video [default: spinners/spinner-256-white.png]
+    -e --disable-spinner          disable spinner, just show stopped video
     -p --speed <speed>            speed of the spinner, rounded to integer [default: 2]
     -t --trim <trim>              trim video to length in seconds or "HH:MM:SS.msec" format
     -r --brightness <brightness>  change brightness during buffering, use values between -1.0 and 1.0 [default: 0.0]
@@ -68,6 +71,7 @@ class Bufferer:
         self.input_file = arguments["--input"]
         self.output_file = arguments["--output"]
         self.spinner = arguments["--spinner"]
+        self.disable_spinner = arguments["--disable-spinner"]
         self.speed = int(arguments["--speed"])
         self.trim = arguments["--trim"]
         self.force_overwrite = arguments["--force"]
@@ -238,12 +242,15 @@ class Bufferer:
         codecs = []
 
         if self.has_video:
-            vfilter = '''
-            [0:v]{self.loop_cmd}[stallvid];
-            [stallvid]avgblur={self.blur}:enable='{self.enable_cmd}', eq=brightness={self.brightness}:enable='{self.enable_cmd}'[stallvidblur];
-            movie=filename={self.spinner}:loop=0, setpts=N/(FRAME_RATE*TB)*{self.speed}[spinner];
-            [stallvidblur][spinner]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2:shortest=1:enable='{self.enable_cmd}'[outv]
-            '''.format(**locals())
+            if self.disable_spinner:
+                vfilter = "[0:v]{self.loop_cmd}[outv]".format(**locals())
+            else:
+                vfilter = '''
+                [0:v]{self.loop_cmd}[stallvid];
+                [stallvid]avgblur={self.blur}:enable='{self.enable_cmd}', eq=brightness={self.brightness}:enable='{self.enable_cmd}'[stallvidblur];
+                movie=filename={self.spinner}:loop=0, setpts=N/(FRAME_RATE*TB)*{self.speed}[spinner];
+                [stallvidblur][spinner]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2:shortest=1:enable='{self.enable_cmd}'[outv]
+                '''.format(**locals())
             filters.append(vfilter)
             maps.append('-map "[outv]"')
             codecs.append("-c:v " + self.vcodec)
@@ -280,7 +287,6 @@ def main():
 
     if not arguments["--buflist"]:
         raise Exception("No buffering list given, please specify --buflist")
-
     b = Bufferer(arguments)
     try:
         b.insert_buf_audiovisual()

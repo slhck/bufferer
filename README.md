@@ -19,9 +19,13 @@ Or clone this repository, then run the tool with `python -m bufferer`.
 
 # Usage
 
-    bufferer    [-hfn] -i <input> -b <buflist> -o <output>
+    Usage:
+    bufferer    [-hfne] -i <input> -b <buflist> -o <output>
                 [-v <vcodec>] [-a <acodec>]
-                [-s <spinner>] [-p <speed>] [-t <trim>] [-r <brightness>]
+                [-x <pixfmt>]
+                [-s <spinner>] [--disable-spinner] [-p <speed>]
+                [-t <trim>]
+                [-r <brightness>]
                 [-l <blur>]
                 [--verbose] [--version]
 
@@ -34,7 +38,9 @@ Or clone this repository, then run the tool with `python -m bufferer`.
     -o --output <output>          output video file
     -v --vcodec <vcodec>          video encoder to use (see `ffmpeg -encoders`) [default: ffv1]
     -a --acodec <acodec>          audio encoder to use (see `ffmpeg -encoders`) [default: pcm_s16le]
+    -x --pixfmt <pixfmt>          set pixel format for output [default: yuv420p]
     -s --spinner <spinner>        path to spinner animated file or video [default: spinners/spinner-256-white.png]
+    -e --disable-spinner          disable spinner, just show stopped video
     -p --speed <speed>            speed of the spinner, rounded to integer [default: 2]
     -t --trim <trim>              trim video to length in seconds or "HH:MM:SS.msec" format
     -r --brightness <brightness>  change brightness during buffering, use values between -1.0 and 1.0 [default: 0.0]

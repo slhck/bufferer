@@ -50,8 +50,8 @@ Or clone this repository, then run the tool with `python -m bufferer`.
 
 # Caveats
 
-- The script doesn't work on input files that have no video or no audio.
 - You need to pick a proper output file format for the codecs you choose. Use `.avi` for the FFV1 and PCM WAV defaults.
+- Make sure to select the right pixel format as output, e.g. `--pixfmt yuv420p` for higher compatibility.
 
 # Acknowledgements
 

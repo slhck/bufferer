@@ -174,7 +174,7 @@ class Bufferer:
 
         total_vlooped = 0
         total_alooped = 0
-        total_enable = 0
+        total_buf_len = 0
 
         for buf_event in self.buflist:
             buf_pos, buf_len = buf_event
@@ -192,8 +192,7 @@ class Bufferer:
 
             if self.has_audio:
                 # offset buf_position by the total number of looped samples
-                buf_pos_samples = int(
-                    self.samplerate * buf_pos) + total_alooped
+                buf_pos_samples = int(self.samplerate * buf_pos) + total_alooped
                 buf_len_samples = int(self.samplerate * buf_len)
 
                 aloop_cmd = "aloop=loop={buf_len_samples}:size=1:start={buf_pos_samples},asetpts=N/SAMPLE_RATE/TB".format(**locals())
@@ -201,13 +200,13 @@ class Bufferer:
 
                 total_alooped += buf_len_samples
 
-            buf_pos_enable = buf_pos + total_enable
-            buf_len_enable = buf_pos_enable + buf_len
-            enable_cmd = "between(t,{buf_pos_enable},{buf_len_enable})".format(
-                **locals())
+            buf_pos_enable = round(total_buf_len + buf_pos, 3)
+            buf_len_enable = round(buf_pos_enable + buf_len, 3)
+
+            enable_cmd = "between(t,{buf_pos_enable},{buf_len_enable})".format(**locals())
             enable_cmds.append(enable_cmd)
 
-            total_enable = total_enable + buf_len
+            total_buf_len = total_buf_len + buf_len
 
         self.loop_cmd = (", ").join(vloop_cmds)
         self.aloop_cmd = (", ").join(aloop_cmds)

@@ -268,7 +268,7 @@ class Bufferer:
         codecs = " ".join(codecs)
 
         cmd = '''
-        ffmpeg -nostdin {self.overwrite_spec} -i "{self.input_file}"
+        ffmpeg -nostdin -threads 1 {self.overwrite_spec} -i "{self.input_file}"
         -filter_complex "{filters}" -shortest {maps} {self.trim_spec} {codecs} "{self.output_file}"
         '''.format(**locals()).replace('\n', ' ').strip()
 

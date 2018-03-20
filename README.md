@@ -58,24 +58,49 @@ Or clone this repository, then run the tool with `python -m bufferer`.
 - Big Buck Bunny: Blender Foundation
 - Free spinners from http://preloaders.net/en/free
 - Click from http://metronomer.com/
+- Count from https://www.youtube.com/watch?v=U03lLvhBzOw
 
 # Helpful info
 
 To generate AV sync samples:
 
-    ffmpeg -f lavfi -i testsrc=duration=20:size=1280x720:rate=24 \
-    -vf "drawtext=timecode='00\:00\:00\:00':fontsize=72:r=24:x=(w-tw)/2:y=h-(2*lh): \
-    fontcolor=white:box=1:boxcolor=black@1.0" \
-    -c:v huffyuv testsrc_24.avi
-    ffmpeg -f lavfi -i testsrc=duration=20:size=1280x720:rate=23.97 \
-    -vf "drawtext=timecode='00\:00\:00\:00':fontsize=72:r=23.97:x=(w-tw)/2:y=h-(2*lh): \
-    fontcolor=white:box=1:boxcolor=black@1.0" \
-    -c:v huffyuv testsrc_2397.avi
+```
+ffmpeg \
+-y \
+-f lavfi -i testsrc=duration=60:size=320x240:rate=60,format=pix_fmts=yuv420p \
+-i click_and_count.m4a
+<output>
+```
 
-    ffmpeg -i testsrc_24.avi -i click.mp3 -c:v copy -c:a pcm_s16le \
-    -map 0:v -map 1:a testsrc_24_c.avi
-    ffmpeg -i testsrc_2397.avi -i click.mp3 -c:v copy -c:a pcm_s16le \
-    -map 0:v -map 1:a testsrc_2397_c.avi
+Sample command to test buffering:
+
+```
+ffmpeg \
+-y \
+-f lavfi -i testsrc=duration=60:size=320x240:rate=60,format=pix_fmts=yuv420p \
+-i spinners/click_and_count.m4a \
+-filter_complex " \
+    [0:v] \
+        loop=loop=240:size=1:start=0, setpts=N/FRAME_RATE/TB, \
+        loop=loop=30:size=1:start=840, setpts=N/FRAME_RATE/TB, \
+        loop=loop=84:size=1:start=1140, setpts=N/FRAME_RATE/TB, \
+        loop=loop=48:size=1:start=1548, setpts=N/FRAME_RATE/TB \
+    [stallvid]; \
+        movie=filename=spinners/spinner-64-white.png:loop=0, setpts=N/(FRAME_RATE*TB)*2 \
+    [spinner]; \
+    [stallvid][spinner] \
+        overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2:shortest=1:\
+        enable='between(t,0,4.0)+between(t,14.0,14.5)+between(t,19.0,20.4)+between(t,25.8,26.6)' \
+    [outv];
+    [1:a] \
+        aloop=loop=192000:size=1:start=0, asetpts=N/SAMPLE_RATE/TB, \
+        aloop=loop=24000:size=1:start=672000, asetpts=N/SAMPLE_RATE/TB, \
+        aloop=loop=67200:size=1:start=912000, asetpts=N/SAMPLE_RATE/TB, \
+        aloop=loop=38400:size=1:start=1238399, asetpts=N/SAMPLE_RATE/TB, \
+        volume=0:enable='between(t,0,4.0)+between(t,14.0,14.5)+between(t,19.0,20.4)+between(t,25.8,26.6)' \
+    [outa] \
+" -shortest -map "[outv]" -map "[outa]" output.mp4
+```
 
 # License
 

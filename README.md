@@ -50,6 +50,7 @@ Or clone this repository, then run the tool with `python -m bufferer`.
 
 # Caveats
 
+- The time stamps for the buffering list must be given in media time. If, for example, you want an initial loading time of 5 seconds, and then a stalling event to occur 10 seconds into the video, specify `[[0, 5], [10, 5]]`.
 - You need to pick a proper output file format for the codecs you choose. Use `.avi` for the FFV1 and PCM WAV defaults.
 - Make sure to select the right pixel format as output, e.g. `--pixfmt yuv420p` for higher compatibility.
 

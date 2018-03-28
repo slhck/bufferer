@@ -60,6 +60,7 @@ import json
 import os
 import re
 import subprocess
+import sys
 
 from . import __version__
 
@@ -106,29 +107,24 @@ class Bufferer:
         # get info needed for processing
         self.parse_input()
 
-    def run_command(self, cmd, raw=True):
+    def run_command(self, cmd):
         """
         Run a command directly
         """
         if self.dry or self.verbose:
-            print("[cmd] " + str(cmd))
+            print("[cmd] " + " ".join(cmd))
             if self.dry:
                 return
 
-        if raw:
-            process = subprocess.Popen(
-                cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-        else:
-            process = subprocess.Popen(
-                cmd.split(" "), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = process.communicate()
 
         if process.returncode == 0:
             return stdout.decode('utf-8') + stderr.decode('utf-8')
         else:
-            print("[error] running command: {}".format(cmd))
+            print("[error] running command: {}".format(" ".join(cmd)))
             print(stderr.decode('utf-8'))
+            sys.exit(1)
 
     def parse_input(self):
         """
@@ -163,7 +159,7 @@ class Bufferer:
         if not (self.fps or self.samplerate):
             raise Exception("[error] could not find video stream or detect fps / samplerate")
 
-    def set_loop_cmds(self):
+    def generate_loop_cmds(self):
         """
         Construct the looping commands
         """
@@ -184,8 +180,7 @@ class Bufferer:
                 buf_pos_frames = int(self.fps * buf_pos) + total_vlooped
                 buf_len_frames = int(self.fps * buf_len)
 
-                loop_cmd = "loop=loop={buf_len_frames}:size=1:start={buf_pos_frames},\
-                setpts=N/FRAME_RATE/TB".format(**locals())
+                loop_cmd = "loop=loop={buf_len_frames}:size=1:start={buf_pos_frames},setpts=N/FRAME_RATE/TB".format(**locals())
                 vloop_cmds.append(loop_cmd)
 
                 total_vlooped += buf_len_frames
@@ -208,8 +203,8 @@ class Bufferer:
 
             total_buf_len = total_buf_len + buf_len
 
-        self.loop_cmd = (", ").join(vloop_cmds)
-        self.aloop_cmd = (", ").join(aloop_cmds)
+        self.loop_cmd = (",").join(vloop_cmds)
+        self.aloop_cmd = (",").join(aloop_cmds)
         self.enable_cmd = ("+").join(enable_cmds)
 
     def set_specs(self):
@@ -223,9 +218,9 @@ class Bufferer:
             self.overwrite_spec = "-n"
 
         if self.trim:
-            self.trim_spec = "-t " + self.trim
+            self.trim_spec = ["-t", self.trim]
         else:
-            self.trim_spec = ""
+            self.trim_spec = None
 
     def insert_buf_audiovisual(self):
         """
@@ -233,49 +228,92 @@ class Bufferer:
         frames and audio samples at the corresponding positions.
         """
 
-        self.set_loop_cmds()
+        self.generate_loop_cmds()
         self.set_specs()
 
-        filters = []
-        maps = []
-        codecs = []
+        vfilter = ""
+        afilter = ""
+        vmaps = []
+        amaps = []
+        vcodecs = []
+        acodecs = []
+
+        base_cmd = [
+            'ffmpeg', '-nostdin', '-threads', '1',
+            self.overwrite_spec, '-i', self.input_file
+        ]
 
         if self.has_video:
             if self.disable_spinner:
                 vfilter = "[0:v]{self.loop_cmd}[outv]".format(**locals())
             else:
-                vfilter = '''
-                [0:v]{self.loop_cmd}[stallvid];
-                [stallvid]avgblur={self.blur}:enable='{self.enable_cmd}', eq=brightness={self.brightness}:enable='{self.enable_cmd}'[stallvidblur];
-                movie=filename={self.spinner}:loop=0, setpts=N/(FRAME_RATE*TB)*{self.speed}[spinner];
-                [stallvidblur][spinner]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2:shortest=1:enable='{self.enable_cmd}'[outv]
-                '''.format(**locals())
-            filters.append(vfilter)
-            maps.append('-map "[outv]"')
-            codecs.append("-c:v " + self.vcodec)
-            codecs.append("-pix_fmt " + self.pixfmt)
+                vfilter = ';'.join([
+                    "[0:v]{self.loop_cmd}[stallvid]".format(**locals()),
+                    "[stallvid]avgblur={self.blur}:enable='{self.enable_cmd}',eq=brightness={self.brightness}:enable='{self.enable_cmd}'[stallvidblur]".format(**locals()),
+                    "movie=filename={self.spinner}:loop=0,setpts=N/(FRAME_RATE*TB)*{self.speed}[spinner]".format(**locals()),
+                    "[stallvidblur][spinner]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2:shortest=1:enable='{self.enable_cmd}'[outv]".format(**locals())
+                ])
+            vmaps = ['-map', '[outv]']
+            vcodecs = ['-c:v', self.vcodec, '-pix_fmt', self.pixfmt]
 
         if self.has_audio:
             afilter = "[0:a]{self.aloop_cmd},volume=0:enable='{self.enable_cmd}'[outa]".format(**locals())
-            filters.append(afilter)
-            maps.append('-map "[outa]"')
-            codecs.append("-c:a " + self.acodec)
+            amaps = ['-map', '[outa]']
+            acodecs = ['-c:a', self.acodec]
 
-        filters = ";".join(filters)
-        filters = (" ").join(filters.split())  # remove multiple spaces
+        if self.trim_spec:
+            base_cmd.extend(self.trim_spec)
+        base_cmd.append('-shortest')
 
-        maps = " ".join(maps)
-        codecs = " ".join(codecs)
+        # directly process
+        if self.has_video and not self.has_audio:
+            base_cmd.extend(['-filter_complex', vfilter])
+            base_cmd.extend(vmaps)
+            base_cmd.extend(vcodecs)
+            base_cmd.append(self.output_file)
 
-        cmd = '''
-        ffmpeg -nostdin -threads 1 {self.overwrite_spec} -i "{self.input_file}"
-        -filter_complex "{filters}" -shortest {maps} {self.trim_spec} {codecs} "{self.output_file}"
-        '''.format(**locals()).replace('\n', ' ').strip()
+            if self.verbose:
+                print("[info] running simple command for video processing")
 
-        if self.verbose:
-            print("[info] running ffmpeg command, this may take a while")
+            self.run_command(base_cmd)
 
-        self.run_command(cmd)
+        else:
+            tmp_out_video = self.output_file + "_video.nut"
+            tmp_out_audio = self.output_file + "_audio.nut"
+
+            tmp_cmd_video = base_cmd[:]
+            tmp_cmd_audio = base_cmd[:]
+
+            tmp_cmd_video.extend(['-filter_complex', vfilter])
+            tmp_cmd_video.extend(vmaps)
+            tmp_cmd_video.extend(vcodecs)
+            tmp_cmd_video.append('-an')
+            tmp_cmd_video.extend(['-vsync', 'cfr'])
+            tmp_cmd_video.append(tmp_out_video)
+
+            tmp_cmd_audio.extend(['-filter_complex', afilter])
+            tmp_cmd_audio.extend(amaps)
+            tmp_cmd_audio.extend(acodecs)
+            tmp_cmd_video.append('-vn')
+            tmp_cmd_audio.append(tmp_out_audio)
+
+            if self.verbose:
+                print("[info] running video processing command")
+            self.run_command(tmp_cmd_video)
+
+            if self.verbose:
+                print("[info] running audio processing command")
+            self.run_command(tmp_cmd_audio)
+
+            combine_cmd = [
+                'ffmpeg', self.overwrite_spec, '-i', tmp_out_video, '-i', tmp_out_audio,
+                '-c', 'copy', '-shortest', self.output_file
+            ]
+
+            self.run_command(tmp_cmd_audio)
+
+            os.remove(tmp_out_video)
+            os.remove(tmp_out_audio)
 
 
 def main():

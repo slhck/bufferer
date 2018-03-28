@@ -72,11 +72,10 @@ class TestBufferer(unittest.TestCase):
         self.assertTrue(os.path.isfile(tmp_video_out))
 
     def tearDown(self):
-        subprocess.check_output(['rm', '-f', os.path.join(ROOT_PATH, 'test', 'tmp.mp4')])
-        # for file in os.listdir(os.path.join(ROOT_PATH, 'test')):
-        #     if os.path.splitext(file)[1] == '.mp4':
-        #         print("Deleting {}".format(file))
-        #         os.remove(os.path.join(ROOT_PATH, 'test', file))
+        for file in os.listdir(os.path.join(ROOT_PATH, 'test')):
+            if os.path.splitext(file)[1] == '.mp4':
+                print("Deleting {}".format(file))
+                os.remove(os.path.join(ROOT_PATH, 'test', file))
 
 
 if __name__ == '__main__':

@@ -231,8 +231,7 @@ class Bufferer:
         self.generate_loop_cmds()
         self.set_specs()
 
-        vfilter = ""
-        afilter = ""
+        filters = []
         vmaps = []
         amaps = []
         vcodecs = []
@@ -250,70 +249,71 @@ class Bufferer:
                 vfilter = ';'.join([
                     "[0:v]{self.loop_cmd}[stallvid]".format(**locals()),
                     "[stallvid]avgblur={self.blur}:enable='{self.enable_cmd}',eq=brightness={self.brightness}:enable='{self.enable_cmd}'[stallvidblur]".format(**locals()),
-                    "movie=filename={self.spinner}:loop=0,setpts=N/(FRAME_RATE*TB)*{self.speed}[spinner]".format(**locals()),
+                    "movie=filename={self.spinner}:loop=0,setpts=N/(FRAME_RATE*TB)*{self.speed},fps=fps={self.fps}[spinner]".format(**locals()),
                     "[stallvidblur][spinner]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2:shortest=1:enable='{self.enable_cmd}'[outv]".format(**locals())
                 ])
+            filters.append(vfilter)
             vmaps = ['-map', '[outv]']
             vcodecs = ['-c:v', self.vcodec, '-pix_fmt', self.pixfmt]
 
         if self.has_audio:
             afilter = "[0:a]{self.aloop_cmd},volume=0:enable='{self.enable_cmd}'[outa]".format(**locals())
+            filters.append(afilter)
             amaps = ['-map', '[outa]']
             acodecs = ['-c:a', self.acodec]
 
         if self.trim_spec:
             base_cmd.extend(self.trim_spec)
+
+        base_cmd.extend(['-filter_complex', ";".join(filters)])
+        base_cmd.extend(vmaps)
+        base_cmd.extend(amaps)
+        base_cmd.extend(vcodecs)
+        base_cmd.extend(acodecs)
+        base_cmd.append(self.output_file)
+
+        if self.verbose:
+            print("[info] running command for processing")
         base_cmd.append('-shortest')
+        self.run_command(base_cmd)
 
-        # directly process
-        if self.has_video and not self.has_audio:
-            base_cmd.extend(['-filter_complex', vfilter])
-            base_cmd.extend(vmaps)
-            base_cmd.extend(vcodecs)
-            base_cmd.append(self.output_file)
+        # else:
+        #     tmp_out_video = self.output_file + "_video.nut"
+        #     tmp_out_audio = self.output_file + "_audio.nut"
 
-            if self.verbose:
-                print("[info] running simple command for video processing")
+        #     tmp_cmd_video = base_cmd[:]
+        #     tmp_cmd_audio = base_cmd[:]
 
-            self.run_command(base_cmd)
+        #     tmp_cmd_video.extend(['-filter_complex', vfilter])
+        #     tmp_cmd_video.extend(vmaps)
+        #     tmp_cmd_video.extend(vcodecs)
+        #     tmp_cmd_video.append('-an')
+        #     tmp_cmd_video.extend(['-vsync', 'cfr'])
+        #     tmp_cmd_video.append(tmp_out_video)
 
-        else:
-            tmp_out_video = self.output_file + "_video.nut"
-            tmp_out_audio = self.output_file + "_audio.nut"
+        #     tmp_cmd_audio.extend(['-filter_complex', afilter])
+        #     tmp_cmd_audio.extend(amaps)
+        #     tmp_cmd_audio.extend(acodecs)
+        #     tmp_cmd_video.append('-vn')
+        #     tmp_cmd_audio.append(tmp_out_audio)
 
-            tmp_cmd_video = base_cmd[:]
-            tmp_cmd_audio = base_cmd[:]
+        #     if self.verbose:
+        #         print("[info] running video processing command")
+        #     self.run_command(tmp_cmd_video)
 
-            tmp_cmd_video.extend(['-filter_complex', vfilter])
-            tmp_cmd_video.extend(vmaps)
-            tmp_cmd_video.extend(vcodecs)
-            tmp_cmd_video.append('-an')
-            tmp_cmd_video.extend(['-vsync', 'cfr'])
-            tmp_cmd_video.append(tmp_out_video)
+        #     if self.verbose:
+        #         print("[info] running audio processing command")
+        #     self.run_command(tmp_cmd_audio)
 
-            tmp_cmd_audio.extend(['-filter_complex', afilter])
-            tmp_cmd_audio.extend(amaps)
-            tmp_cmd_audio.extend(acodecs)
-            tmp_cmd_video.append('-vn')
-            tmp_cmd_audio.append(tmp_out_audio)
+        #     combine_cmd = [
+        #         'ffmpeg', self.overwrite_spec, '-i', tmp_out_video, '-i', tmp_out_audio,
+        #         '-c', 'copy', '-shortest', self.output_file
+        #     ]
 
-            if self.verbose:
-                print("[info] running video processing command")
-            self.run_command(tmp_cmd_video)
+        #     self.run_command(tmp_cmd_audio)
 
-            if self.verbose:
-                print("[info] running audio processing command")
-            self.run_command(tmp_cmd_audio)
-
-            combine_cmd = [
-                'ffmpeg', self.overwrite_spec, '-i', tmp_out_video, '-i', tmp_out_audio,
-                '-c', 'copy', '-shortest', self.output_file
-            ]
-
-            self.run_command(tmp_cmd_audio)
-
-            os.remove(tmp_out_video)
-            os.remove(tmp_out_audio)
+        #     os.remove(tmp_out_video)
+        #     os.remove(tmp_out_audio)
 
 
 def main():

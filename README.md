@@ -27,6 +27,7 @@ Or clone this repository, then run the tool with `python -m bufferer`.
                 [-t <trim>]
                 [-r <brightness>]
                 [-l <blur>]
+                [--black-frame]
                 [--verbose] [--version]
 
     -h --help                     show help message
@@ -45,6 +46,7 @@ Or clone this repository, then run the tool with `python -m bufferer`.
     -t --trim <trim>              trim video to length in seconds or "HH:MM:SS.msec" format
     -r --brightness <brightness>  change brightness during buffering, use values between -1.0 and 1.0 [default: 0.0]
     -l --blur <blur>              change blur during buffering, value specifies kernel size [default: 5]
+    -c --black-frame              start with a black frame if there is buffering at position 0.0
     --verbose                     show verbose output
     --version                     show version
 

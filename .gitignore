@@ -27,3 +27,5 @@ wheels/
 .venv
 venv/
 ENV/
+
+test/*.mp4

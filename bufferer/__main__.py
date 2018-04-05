@@ -21,7 +21,7 @@
 # SOFTWARE.
 
 """
-Bufferer v0.7
+Bufferer v0.8
 
 Inserts fake rebuffering events into video
 
@@ -33,6 +33,7 @@ Usage:
                 [-t <trim>]
                 [-r <brightness>]
                 [-l <blur>]
+                [--black-frame]
                 [--verbose] [--version]
 
     -h --help                     show help message
@@ -51,6 +52,7 @@ Usage:
     -t --trim <trim>              trim video to length in seconds or "HH:MM:SS.msec" format
     -r --brightness <brightness>  change brightness during buffering, use values between -1.0 and 1.0 [default: 0.0]
     -l --blur <blur>              change blur during buffering, value specifies kernel size [default: 5]
+    -c --black-frame              start with a black frame if there is buffering at position 0.0
     --verbose                     show verbose output
     --version                     show version
 """
@@ -83,6 +85,7 @@ class Bufferer:
         self.verbose = arguments["--verbose"]
         self.brightness = arguments["--brightness"]
         self.blur = arguments["--blur"]
+        self.black_frame = arguments["--black-frame"]
 
         try:
             self.buflist = json.loads(arguments["--buflist"])
@@ -172,6 +175,8 @@ class Bufferer:
         total_alooped = 0
         total_buf_len = 0
 
+        self.enable_black_cmd = None
+
         for buf_event in self.buflist:
             buf_pos, buf_len = buf_event
 
@@ -201,9 +206,12 @@ class Bufferer:
             enable_cmd = "between(t,{buf_pos_enable},{buf_len_enable})".format(**locals())
             enable_cmds.append(enable_cmd)
 
+            if int(buf_pos_enable) == 0:
+                self.enable_black_cmd = "between(t,0,{buf_len_enable})".format(**locals())
+
             total_buf_len = total_buf_len + buf_len
 
-        self.loop_cmd = (",").join(vloop_cmds)
+        self.vloop_cmd = (",").join(vloop_cmds)
         self.aloop_cmd = (",").join(aloop_cmds)
         self.enable_cmd = ("+").join(enable_cmds)
 
@@ -243,16 +251,23 @@ class Bufferer:
         ]
 
         if self.has_video:
+            vfilters = []
             if self.disable_spinner:
-                vfilter = "[0:v]{self.loop_cmd}[outv]".format(**locals())
+                vfilters = ["[0:v]{self.vloop_cmd}[outv]".format(**locals())]
             else:
-                vfilter = ';'.join([
-                    "[0:v]{self.loop_cmd}[stallvid]".format(**locals()),
-                    "[stallvid]avgblur={self.blur}:enable='{self.enable_cmd}',eq=brightness={self.brightness}:enable='{self.enable_cmd}'[stallvidblur]".format(**locals()),
+                vfilters.append("[0:v]{self.vloop_cmd}[stallvid]".format(**locals()))
+                if self.black_frame and self.enable_black_cmd:
+                    vfilters.extend([
+                        "color=c=black[black]",
+                        "[black][stallvid]scale2ref[black][stallvid]",
+                        "[stallvid][black]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2:shortest=1:enable='{self.enable_black_cmd}'[stallvid]".format(**locals()),
+                    ])
+                vfilters.extend([
+                    "[stallvid]avgblur={self.blur}:enable='{self.enable_cmd}',eq=brightness={self.brightness}:enable='{self.enable_cmd}'[stallvid]".format(**locals()),
                     "movie=filename={self.spinner}:loop=0,setpts=N/(FRAME_RATE*TB)*{self.speed},fps=fps={self.fps}[spinner]".format(**locals()),
-                    "[stallvidblur][spinner]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2:shortest=1:enable='{self.enable_cmd}'[outv]".format(**locals())
+                    "[stallvid][spinner]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2:shortest=1:enable='{self.enable_cmd}'[outv]".format(**locals())
                 ])
-            filters.append(vfilter)
+            filters.append(';'.join(vfilters))
             vmaps = ['-map', '[outv]']
             vcodecs = ['-c:v', self.vcodec, '-pix_fmt', self.pixfmt]
 
@@ -270,11 +285,11 @@ class Bufferer:
         base_cmd.extend(amaps)
         base_cmd.extend(vcodecs)
         base_cmd.extend(acodecs)
+        base_cmd.append('-shortest')
         base_cmd.append(self.output_file)
 
         if self.verbose:
             print("[info] running command for processing")
-        base_cmd.append('-shortest')
         self.run_command(base_cmd)
 
         # else:

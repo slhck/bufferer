@@ -1,5 +1,11 @@
 # Changelog
 
+## 2018-04-05, v0.8
+
+- Fix various bugs related to timing
+- Fix bug with spinner flashing
+- Allow setting a black frame in the beginning
+
 ## 2017-11-02, v0.5
 
 - Allow disabling spinner

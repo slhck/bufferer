@@ -40,7 +40,7 @@ def create_tmp_video():
     tmp_video_out = os.path.join(ROOT_PATH, 'test', 'tmp_out.mp4')
 
     tmp_video_cmd = [
-        "ffmpeg", "-f", "lavfi", "-i", "testsrc=duration=10:size=320x240:rate=60,format=pix_fmts=yuv420p",
+        "ffmpeg", "-y", "-f", "lavfi", "-i", "testsrc=duration=10:size=640x480:rate=60,format=pix_fmts=yuv420p",
         "-i", os.path.join(ROOT_PATH, 'spinners', 'click_and_count.m4a'),
         "-shortest",
         "-c:v", "libx264", "-preset", "ultrafast", "-c:a", "copy",
@@ -61,6 +61,7 @@ class TestBufferer(unittest.TestCase):
 
         output, _ = bufferer_call([
             '-f',
+            '--black-frame',
             '-i', tmp_video_in,
             '-b', '[[0, 2],[5, 1]]',
             '-o', tmp_video_out,

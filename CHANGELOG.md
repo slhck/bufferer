@@ -1,5 +1,9 @@
 # Changelog
 
+## 2018-04-05, v0.9
+
+- Set rate for black filter
+
 ## 2018-04-05, v0.8
 
 - Fix various bugs related to timing

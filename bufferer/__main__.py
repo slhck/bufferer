@@ -258,7 +258,7 @@ class Bufferer:
                 vfilters.append("[0:v]{self.vloop_cmd}[stallvid]".format(**locals()))
                 if self.black_frame and self.enable_black_cmd:
                     vfilters.extend([
-                        "color=c=black[black]",
+                        "color=c=black:r={self.fps}[black]".format(**locals()),
                         "[black][stallvid]scale2ref[black][stallvid]",
                         "[stallvid][black]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2:shortest=1:enable='{self.enable_black_cmd}'[stallvid]".format(**locals()),
                     ])

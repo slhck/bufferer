@@ -255,17 +255,21 @@ class Bufferer:
             if self.disable_spinner:
                 vfilters = ["[0:v]{self.vloop_cmd}[outv]".format(**locals())]
             else:
-                vfilters.append("[0:v]{self.vloop_cmd}[stallvid]".format(**locals()))
                 if self.black_frame and self.enable_black_cmd:
                     vfilters.extend([
+                        "[0:v]{self.vloop_cmd}[stallvid]".format(**locals()),
                         "color=c=black:r={self.fps}[black]".format(**locals()),
-                        "[black][stallvid]scale2ref[black][stallvid]",
-                        "[stallvid][black]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2:shortest=1:enable='{self.enable_black_cmd}'[stallvid]".format(**locals()),
+                        "[black][stallvid]scale2ref[black2][stallvid]",
+                        "[stallvid][black2]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2:shortest=1:enable='{self.enable_black_cmd}'[stallvid2]".format(**locals()),
                     ])
+                else:
+                    vfilters.append(
+                        "[0:v]{self.vloop_cmd}[stallvid2]".format(**locals()),
+                    )
                 vfilters.extend([
-                    "[stallvid]avgblur={self.blur}:enable='{self.enable_cmd}',eq=brightness={self.brightness}:enable='{self.enable_cmd}'[stallvid]".format(**locals()),
+                    "[stallvid2]avgblur={self.blur}:enable='{self.enable_cmd}',eq=brightness={self.brightness}:enable='{self.enable_cmd}'[stallvidblur]".format(**locals()),
                     "movie=filename={self.spinner}:loop=0,setpts=N/(FRAME_RATE*TB)*{self.speed},fps=fps={self.fps}[spinner]".format(**locals()),
-                    "[stallvid][spinner]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2:shortest=1:enable='{self.enable_cmd}'[outv]".format(**locals())
+                    "[stallvidblur][spinner]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2:shortest=1:enable='{self.enable_cmd}'[outv]".format(**locals())
                 ])
             filters.append(';'.join(vfilters))
             vmaps = ['-map', '[outv]']

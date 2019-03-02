@@ -7,10 +7,7 @@ import sys
 import unittest
 import subprocess
 
-try:
-    from pathlib import Path
-except ImportError:
-    from pathlib2 import Path  # python2 backport
+from pathlib import Path
 
 ROOT_PATH = os.path.abspath(os.path.dirname(__file__) + '/../')
 sys.path.append(ROOT_PATH)

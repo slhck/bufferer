@@ -6,7 +6,7 @@ Author: Werner Robitza <werner.robitza@gmail.com>
 
 # Requirements
 
-- Python 2.7 or 3.x
+- Python 3.6
 - FFmpeg:
     - download a static build from [their website](http://ffmpeg.org/download.html))
     - put the `ffmpeg` executable in your `$PATH`

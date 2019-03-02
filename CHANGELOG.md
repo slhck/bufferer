@@ -1,45 +1,157 @@
 # Changelog
 
-## 2018-04-05, v0.9
 
-- Set rate for black filter
+## v0.10 (2018-11-07)
 
-## 2018-04-05, v0.8
+### Other
 
-- Fix various bugs related to timing
-- Fix bug with spinner flashing
-- Allow setting a black frame in the beginning
+* Bump version. [Werner Robitza]
 
-## 2017-11-02, v0.5
+* Fix handling of labels. [Werner Robitza]
 
-- Allow disabling spinner
 
-## 2017-10-16, v0.4.3
+## v0.9 (2018-10-22)
 
-- Code style
-- Minor bug in printing exception fixed
+### Other
 
-## 2017-09-28, v0.4.2
+* Bump version. [Werner Robitza]
 
-- Minor improvements
-- Python3 support
+* Bump version. [Werner Robitza]
 
-## 2017-04-11, v0.3.2
+* Set rate for black filter. [Werner Robitza]
 
-- Add `__version__` attribute
 
-## 2017-04-11, v0.3.1
+## v0.8 (2018-04-05)
 
-- Syntax error fixed
+### Other
 
-## 2017-04-08, v0.3
+* Various changes; version bump. [Werner Robitza]
 
-- Detect presence of video and audio, apply filters accordingly
 
-## 2017-03-21, v0.2
+## v0.7 (2018-03-28)
 
-- Fix issue with pip installation
+### Other
 
-## 2017-03-21, v0.1
+* Bump version. [Werner Robitza]
 
-- First PyPi release
+* Fix sync / flashing spinner. [Werner Robitza]
+
+* Add test suite. [Werner Robitza]
+
+* Rewrite command handling. [Werner Robitza]
+
+* Clarify documentation. [Werner Robitza]
+
+
+## v0.6.1 (2018-03-20)
+
+### Other
+
+* Bump version. [Werner Robitza]
+
+* Add better test example. [Werner Robitza]
+
+* Use only 1 thread to prevent desync. [Werner Robitza]
+
+
+## v0.6 (2018-03-19)
+
+### Other
+
+* Round buffer times to fix A/V sync. [Werner Robitza]
+
+
+## v0.5 (2017-11-27)
+
+### Other
+
+* Update caveats. [Werner Robitza]
+
+* Allow setting no spinner, bump version. [Werner Robitza]
+
+
+## v0.4.3 (2017-10-16)
+
+### Other
+
+* Bump version. [Werner Robitza]
+
+* Print exception as string. [Werner Robitza]
+
+
+## v0.4.2 (2017-09-28)
+
+### Other
+
+* Update changelog< [Werner Robitza]
+
+* Python3 and v0.4.2. [Werner Robitza]
+
+
+## v0.4.1 (2017-09-25)
+
+### Other
+
+* Bump version. [Werner Robitza]
+
+* Move audio map option after video. [Werner Robitza]
+
+
+## v0.4 (2017-09-22)
+
+### Other
+
+* Add pix_fmt option. [Werner Robitza]
+
+
+## v0.3.2 (2017-04-11)
+
+### Other
+
+* Add version attribute. [Werner Robitza]
+
+
+## v0.3.1 (2017-04-11)
+
+### Other
+
+* Fix syntax error. [Werner Robitza]
+
+
+## v0.3 (2017-04-08)
+
+### Other
+
+* Bump version. [Werner Robitza]
+
+* Detect presence of audio/video, apply filters accordingly. [Werner Robitza]
+
+* Add 3.6 compatibility. [Werner Robitza]
+
+
+## v0.2 (2017-03-22)
+
+### Other
+
+* Update MANIFEST. [Werner Robitza]
+
+
+## v0.1 (2017-03-21)
+
+### Other
+
+* Initial pypi release. [Werner Robitza]
+
+* Fix skipped audio. [Werner Robitza]
+
+* Make loop infinite, fixes #2. [Werner Robitza]
+
+* Allow printing of commands and enable verbose flag. [Werner Robitza]
+
+* Fix error in script with aloop cmd. [Werner Robitza]
+
+* Update. [Werner Robitza]
+
+* Initial commit. [Werner Robitza]
+
+

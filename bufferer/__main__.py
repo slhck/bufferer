@@ -198,12 +198,12 @@ class Bufferer:
                 # FIXME: the number of frames needs to be 1 shorter?
                 buf_len_frames = int(self.fps * buf_len)
 
-                loop_cmd = f"loop=loop={buf_len_frames}:size=1:start={buf_pos_frames},setpts=N/FRAME_RATE/TB"
+                loop_cmd = "loop=loop={buf_len_frames}:size=1:start={buf_pos_frames},setpts=N/FRAME_RATE/TB".format(**locals())
                 vloop_cmds.append(loop_cmd)
 
                 total_vlooped += buf_len_frames
 
-                venable_cmd = f"between(t,{buf_pos_enable},{buf_len_enable_video})"
+                venable_cmd = "between(t,{buf_pos_enable},{buf_len_enable_video})".format(**locals())
                 venable_cmds.append(venable_cmd)
 
             if self.has_audio:
@@ -211,16 +211,16 @@ class Bufferer:
                 buf_pos_samples = int(self.samplerate * buf_pos) + total_alooped
                 buf_len_samples = int(self.samplerate * buf_len)
 
-                aloop_cmd = f"aloop=loop={buf_len_samples}:size=1:start={buf_pos_samples},asetpts=N/SAMPLE_RATE/TB"
+                aloop_cmd = "aloop=loop={buf_len_samples}:size=1:start={buf_pos_samples},asetpts=N/SAMPLE_RATE/TB".format(**locals())
                 aloop_cmds.append(aloop_cmd)
 
                 total_alooped += buf_len_samples
 
-                aenable_cmd = f"between(t,{buf_pos_enable},{buf_len_enable})"
+                aenable_cmd = "between(t,{buf_pos_enable},{buf_len_enable})".format(**locals())
                 aenable_cmds.append(aenable_cmd)
 
             if int(buf_pos_enable) == 0:
-                self.enable_black_cmd = f"between(t,0,{buf_len_enable_video})"
+                self.enable_black_cmd = "between(t,0,{buf_len_enable_video})".format(**locals())
 
         self.vloop_cmd = (",").join(vloop_cmds)
         self.aloop_cmd = (",").join(aloop_cmds)
@@ -250,23 +250,23 @@ class Bufferer:
 
         vfilters = []
         if self.disable_spinner:
-            vfilters = [f"[0:v]{self.vloop_cmd}[outv]"]
+            vfilters = ["[0:v]{self.vloop_cmd}[outv]".format(**locals())]
         else:
             if self.black_frame and self.enable_black_cmd:
                 vfilters.extend([
-                    f"[0:v]{self.vloop_cmd}[stallvid]",
-                    f"color=c=black:r={self.fps}[black]",
+                    "[0:v]{self.vloop_cmd}[stallvid]".format(**locals()),
+                    "color=c=black:r={self.fps}[black]".format(**locals()),
                     "[black][stallvid]scale2ref[black2][stallvid]",
-                    f"[stallvid][black2]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2:shortest=1:enable='{self.enable_black_cmd}'[stallvid2]",
+                    "[stallvid][black2]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2:shortest=1:enable='{self.enable_black_cmd}'[stallvid2]".format(**locals()),
                 ])
             else:
                 vfilters.append(
-                    f"[0:v]{self.vloop_cmd}[stallvid2]",
+                    "[0:v]{self.vloop_cmd}[stallvid2]".format(**locals()),
                 )
             vfilters.extend([
-                f"[stallvid2]avgblur={self.blur}:enable='{self.venable_cmd}',eq=brightness={self.brightness}:enable='{self.venable_cmd}'[stallvidblur]",
-                f"movie=filename={self.spinner}:loop=0,setpts=N/(FRAME_RATE*TB)*{self.speed},fps=fps={self.fps}[spinner]",
-                f"[stallvidblur][spinner]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2:shortest=1:enable='{self.venable_cmd}'[outv]"
+                "[stallvid2]avgblur={self.blur}:enable='{self.venable_cmd}',eq=brightness={self.brightness}:enable='{self.venable_cmd}'[stallvidblur]".format(**locals()),
+                "movie=filename={self.spinner}:loop=0,setpts=N/(FRAME_RATE*TB)*{self.speed},fps=fps={self.fps}[spinner]".format(**locals()),
+                "[stallvidblur][spinner]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2:shortest=1:enable='{self.venable_cmd}'[outv]".format(**locals())
             ])
 
         filters = [';'.join(vfilters)]
@@ -285,7 +285,7 @@ class Bufferer:
 
         base_cmd = self._get_base_cmd()
 
-        afilter = f"[0:a]{self.aloop_cmd},volume=0:enable='{self.aenable_cmd}'[outa]"
+        afilter = "[0:a]{self.aloop_cmd},volume=0:enable='{self.aenable_cmd}'[outa]".format(**locals())
 
         base_cmd.extend(['-filter_complex', afilter])
         base_cmd.extend(['-map', '[outa]'])
@@ -353,14 +353,14 @@ class Bufferer:
                 print("[info] running command for merging video/audio")
             self.merge_audio_video()
         except Exception as e:
-            print(f"[error] error running processing: {e}")
+            print("[error] error running processing: {e}".format(**locals()))
         finally:
             if not self.dry:
                 for file in [self._get_tmp_filename("video"), self._get_tmp_filename("audio")]:
                     if os.path.isfile(file):
                         os.remove(file)
                     else:
-                        print(f"[warn] temporary file {file} not found!")
+                        print("[warn] temporary file {file} not found!".format(**locals()))
 
 
 def main():

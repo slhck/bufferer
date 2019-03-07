@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v0.11 (2019-03-07)
+
+### Other
+
+* Separate processing of audio-video. [Werner Robitza]
+
+  - Process audio and video separately to ensure that everything is synchronous
+  - Remove Python 2.x support; require Python 3.6+
+
+* Implement new changelog through gitchangelog. [Werner Robitza]
+
+
 ## v0.10 (2018-11-07)
 
 ### Other

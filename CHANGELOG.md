@@ -1,9 +1,18 @@
 # Changelog
 
 
+## v0.12 (2019-03-07)
+
+### Other
+
+* Reintroduce format strings for Python 3.5 compatibility. [Werner Robitza]
+
+
 ## v0.11 (2019-03-07)
 
 ### Other
+
+* Bump version. [Werner Robitza]
 
 * Separate processing of audio-video. [Werner Robitza]
 

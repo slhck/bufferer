@@ -4,20 +4,32 @@ Inserts fake rebuffering events into video.
 
 Author: Werner Robitza <werner.robitza@gmail.com>
 
-# Requirements
+![](preview.gif)
+
+Contents:
+
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Caveats](#caveats)
+- [Acknowledgements](#acknowledgements)
+- [Helpful info](#helpful-info)
+- [License](#license)
+
+## Requirements
 
 - Python 3.6
 - FFmpeg:
     - download a static build from [their website](http://ffmpeg.org/download.html))
     - put the `ffmpeg` executable in your `$PATH`
 
-# Installation
+## Installation
 
     pip3 install bufferer
 
 Or clone this repository, then run the tool with `python -m bufferer`.
 
-# Usage
+## Usage
 
     Usage:
     bufferer    [-hfne] -i <input> -b <buflist> -o <output>
@@ -50,20 +62,20 @@ Or clone this repository, then run the tool with `python -m bufferer`.
     --verbose                     show verbose output
     --version                     show version
 
-# Caveats
+## Caveats
 
 - The time stamps for the buffering list must be given in media time. If, for example, you want an initial loading time of 5 seconds, and then a stalling event to occur 10 seconds into the video, specify `[[0, 5], [10, 5]]`.
 - You need to pick a proper output file format for the codecs you choose. Use `.avi` for the FFV1 and PCM WAV defaults.
 - Make sure to select the right pixel format as output, e.g. `--pixfmt yuv420p` for higher compatibility.
 
-# Acknowledgements
+## Acknowledgements
 
 - Big Buck Bunny: Blender Foundation
 - Free spinners from http://preloaders.net/en/free
 - Click from http://metronomer.com/
 - Count from https://www.youtube.com/watch?v=U03lLvhBzOw
 
-# Helpful info
+## Helpful info
 
 To generate AV sync samples:
 
@@ -105,7 +117,7 @@ ffmpeg \
 " -shortest -map "[outv]" -map "[outa]" output.mp4
 ```
 
-# License
+## License
 
 bufferer, Copyright (c) 2017-2019 Werner Robitza
 

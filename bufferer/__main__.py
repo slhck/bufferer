@@ -34,6 +34,7 @@ Usage:
                 [-r <brightness>]
                 [-l <blur>]
                 [--black-frame]
+                [--force-framerate]
                 [--verbose] [--version]
 
     -h --help                     show help message
@@ -53,6 +54,7 @@ Usage:
     -r --brightness <brightness>  change brightness during buffering, use values between -1.0 and 1.0 [default: 0.0]
     -l --blur <blur>              change blur during buffering, value specifies kernel size [default: 5]
     -c --black-frame              start with a black frame if there is buffering at position 0.0
+    --force-framerate             force output framerate to be the same as the input video file
     --verbose                     show verbose output
     --version                     show version
 """
@@ -86,6 +88,7 @@ class Bufferer:
         self.brightness = arguments["--brightness"]
         self.blur = arguments["--blur"]
         self.black_frame = arguments["--black-frame"]
+        self.force_framerate = arguments["--force-framerate"]
 
         try:
             self.buflist = json.loads(arguments["--buflist"])
@@ -298,11 +301,24 @@ class Bufferer:
         """
         Merge the audio and video files
         """
+
+        if self.force_framerate:
+            # FIXME: this seems to be necessary sometimes
+            output_codec_options = [
+                '-c:v', self.vcodec,
+                '-filter:v',
+                'fps=fps=' + str(self.fps),
+                '-c:a',
+                'copy'
+            ]
+        else:
+            output_codec_options =  ['-c', 'copy']
+
         combine_cmd = [
             'ffmpeg', self.overwrite_spec,
             '-i', self._get_tmp_filename("video"),
             '-i', self._get_tmp_filename("audio"),
-            '-c', 'copy',
+            *output_codec_options,
             self.output_file
         ]
 

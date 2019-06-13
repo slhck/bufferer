@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.13 (2019-05-13)
+
+### Other
+
+* Add re-encoding to force fps when muxing [Werner Robitza]
+
 
 ## v0.12 (2019-03-07)
 

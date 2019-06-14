@@ -118,7 +118,8 @@ class Bufferer:
         Run a command directly
         """
         if self.dry or self.verbose:
-            print("[cmd] " + " ".join(cmd))
+            import shlex
+            print(" ".join([shlex.quote(c) for c in cmd]))
             if self.dry:
                 return
 

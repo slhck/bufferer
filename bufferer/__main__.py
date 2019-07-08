@@ -21,7 +21,7 @@
 # SOFTWARE.
 
 """
-Bufferer v0.13
+Bufferer
 
 Inserts fake rebuffering events into video
 

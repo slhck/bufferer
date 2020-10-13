@@ -18,16 +18,14 @@ done
 
 LATEST_HASH="$(git log --pretty=format:'%h' -n 1)"
 
-BASE_STRING=$(grep -Eo '[0-9]+\.[0-9]+\.[0-9]+' "$VERSION_FILE")
+BASE_STRING=$(grep -Eo '[0-9]+\.[0-9]+' "$VERSION_FILE")
 BASE_LIST=(`echo $BASE_STRING | tr '.' ' '`)
 V_MAJOR=${BASE_LIST[0]}
 V_MINOR=${BASE_LIST[1]}
-V_PATCH=${BASE_LIST[2]}
 echo -e "Current version: $BASE_STRING"
 echo -e " Latest commit hash: $LATEST_HASH"
 V_MINOR=$((V_MINOR + 1))
-V_PATCH=0
-SUGGESTED_VERSION="$V_MAJOR.$V_MINOR.$V_PATCH"
+SUGGESTED_VERSION="$V_MAJOR.$V_MINOR"
 echo -ne "Enter a version number [$SUGGESTED_VERSION]: "
 read INPUT_STRING
 if [ "$INPUT_STRING" = "" ]; then

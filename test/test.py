@@ -10,7 +10,7 @@ import subprocess
 from pathlib import Path
 
 ROOT_PATH = os.path.abspath(os.path.dirname(__file__) + '/../')
-sys.path.append(ROOT_PATH)
+sys.path.insert(0, ROOT_PATH)
 
 from bufferer.__main__ import Bufferer
 

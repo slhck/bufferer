@@ -1,6 +1,6 @@
 # Bufferer
 
-[![PyPI version](https://badge.fury.io/py/bufferer.svg)](https://badge.fury.io/py/bufferer)
+[![PyPI version](https://img.shields.io/pypi/v/bufferer.svg)](https://img.shields.io/pypi/v/bufferer)
 
 Inserts fake rebuffering events into video.
 

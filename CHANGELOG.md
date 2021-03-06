@@ -1,6 +1,15 @@
 # Changelog
 
 
+## v0.17 (2021-03-06)
+
+* Improve setup.py.
+
+* Update badge URL.
+
+* Fix release  script.
+
+
 ## v0.16 (2020-10-13)
 
 * Add python compatibility.

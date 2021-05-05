@@ -1,6 +1,17 @@
 # Changelog
 
 
+## v0.19.0 (2021-05-05)
+
+* Update readme and options.
+
+* Simplify audio disable option.
+
+* WIP: support for disabling audio.
+
+* Update badge link.
+
+
 ## v0.18.0 (2021-03-10)
 
 * Add python_requires to setup.py.

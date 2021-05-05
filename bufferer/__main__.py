@@ -160,7 +160,7 @@ class Bufferer:
             if fps_match:
                 self.fps = float(fps_match.group(1))
 
-        if audio_regex.search(output):
+        if audio_regex.search(output) and not self.audio_disable:
             self.has_audio = True
             audio_line = audio_regex.search(output).group(1)
             hz_pattern = re.compile(r".*, ([0-9]+) Hz,.*")
@@ -324,21 +324,27 @@ class Bufferer:
         else:
             output_codec_options = ["-c", "copy"]
 
-        audio_options = []
-        if self.audio_disable:
-            audio_options = ["-an"]
-
         combine_cmd = [
             "ffmpeg",
             self.overwrite_spec,
-            "-i",
-            self._get_tmp_filename("video"),
-            "-i",
-            self._get_tmp_filename("audio"),
-            *output_codec_options,
-            *audio_options,
-            self.output_file,
         ]
+
+        if self.has_video:
+            combine_cmd.extend([
+                "-i",
+                self._get_tmp_filename("video"),
+            ])
+
+        if self.has_audio:
+            combine_cmd.extend([
+                "-i",
+                self._get_tmp_filename("audio"),
+            ])
+
+        combine_cmd.extend([
+            *output_codec_options,
+            self.output_file,
+        ])
 
         self.run_command(combine_cmd)
 

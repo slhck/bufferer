@@ -63,7 +63,6 @@ class TestBufferer(unittest.TestCase):
             '-b', '[[0, 2],[5, 1]]',
             '-o', tmp_video_out,
             '-v', 'libx264', '-a', 'aac',
-            '--audio-disable'
         ])
 
         print(output)

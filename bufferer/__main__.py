@@ -33,6 +33,7 @@ Usage:
                 [-t <trim>]
                 [-r <brightness>]
                 [-l <blur>]
+                [--audio-disable]
                 [--black-frame]
                 [--force-framerate]
                 [--verbose] [--version]
@@ -53,6 +54,7 @@ Usage:
     -t --trim <trim>              trim video to length in seconds or "HH:MM:SS.msec" format
     -r --brightness <brightness>  change brightness during buffering, use values between -1.0 and 1.0 [default: 0.0]
     -l --blur <blur>              change blur during buffering, value specifies kernel size [default: 5]
+    -an --audio-disable           disable audio for the output, even if input contains audio
     -c --black-frame              start with a black frame if there is buffering at position 0.0
     --force-framerate             force output framerate to be the same as the input video file
     --verbose                     show verbose output
@@ -86,6 +88,7 @@ class Bufferer:
         self.verbose = arguments["--verbose"]
         self.brightness = arguments["--brightness"]
         self.blur = arguments["--blur"]
+        self.audio_disable = arguments["--audio-disable"]
         self.black_frame = arguments["--black-frame"]
         self.force_framerate = arguments["--force-framerate"]
 
@@ -321,6 +324,10 @@ class Bufferer:
         else:
             output_codec_options = ["-c", "copy"]
 
+        audio_options = []
+        if self.audio_disable:
+            audio_options = ["-an"]
+
         combine_cmd = [
             "ffmpeg",
             self.overwrite_spec,
@@ -329,6 +336,7 @@ class Bufferer:
             "-i",
             self._get_tmp_filename("audio"),
             *output_codec_options,
+            *audio_options,
             self.output_file,
         ]
 

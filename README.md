@@ -20,7 +20,7 @@ Contents:
 
 ## Requirements
 
-- Python 3.6
+- Python 3.6 or higher
 - FFmpeg:
     - download a static build from [their website](http://ffmpeg.org/download.html))
     - put the `ffmpeg` executable in your `$PATH`
@@ -41,6 +41,7 @@ Or clone this repository, then run the tool with `python -m bufferer`.
                 [-t <trim>]
                 [-r <brightness>]
                 [-l <blur>]
+                [--audio-disable]
                 [--black-frame]
                 [--force-framerate]
                 [--verbose] [--version]
@@ -62,6 +63,7 @@ Or clone this repository, then run the tool with `python -m bufferer`.
     -r --brightness <brightness>  change brightness during buffering, use values between -1.0 and 1.0 [default: 0.0]
     -l --blur <blur>              change blur during buffering, value specifies kernel size [default: 5]
     -c --black-frame              start with a black frame if there is buffering at position 0.0
+    --audio-disable               disable audio for the output, even if input contains audio
     --force-framerate             force output framerate to be the same as the input video file
     --verbose                     show verbose output
     --version                     show version
@@ -123,7 +125,7 @@ ffmpeg \
 
 ## License
 
-bufferer, Copyright (c) 2017-2019 Werner Robitza
+bufferer, Copyright (c) 2017-2021 Werner Robitza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 

@@ -54,8 +54,8 @@ Usage:
     -t --trim <trim>              trim video to length in seconds or "HH:MM:SS.msec" format
     -r --brightness <brightness>  change brightness during buffering, use values between -1.0 and 1.0 [default: 0.0]
     -l --blur <blur>              change blur during buffering, value specifies kernel size [default: 5]
-    -an --audio-disable           disable audio for the output, even if input contains audio
     -c --black-frame              start with a black frame if there is buffering at position 0.0
+    --audio-disable               disable audio for the output, even if input contains audio
     --force-framerate             force output framerate to be the same as the input video file
     --verbose                     show verbose output
     --version                     show version

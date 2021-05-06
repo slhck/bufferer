@@ -1,6 +1,13 @@
 # Changelog
 
 
+## v0.19.1 (2021-05-06)
+
+* Fix support for no audio (#6)
+
+  * Removed error message when audio is not included in SRC, and cleanup
+
+
 ## v0.19.0 (2021-05-05)
 
 * Update readme and options.

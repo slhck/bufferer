@@ -385,6 +385,7 @@ class Bufferer:
         self.set_specs()
 
         tmp_file_list = []
+
         try:
             if self.has_video:
                 if self.verbose:

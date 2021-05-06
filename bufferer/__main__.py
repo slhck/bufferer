@@ -384,16 +384,18 @@ class Bufferer:
         self.generate_loop_cmds()
         self.set_specs()
 
+        tmp_file_list = []
         try:
             if self.has_video:
                 if self.verbose:
                     print("[info] running command for processing video")
                 self.insert_buf_video()
+                tmp_file_list.append(self._get_tmp_filename("video"))
             if self.has_audio:
                 if self.verbose:
                     print("[info] running command for processing audio")
                 self.insert_buf_audio()
-
+                tmp_file_list.append(self._get_tmp_filename("audio"))
             if self.verbose:
                 print("[info] running command for merging video/audio")
             self.merge_audio_video()
@@ -401,10 +403,7 @@ class Bufferer:
             print(f"[error] error running processing: {e}")
         finally:
             if not self.dry:
-                for file in [
-                    self._get_tmp_filename("video"),
-                    self._get_tmp_filename("audio"),
-                ]:
+                for file in tmp_file_list:
                     if os.path.isfile(file):
                         os.remove(file)
                     else:

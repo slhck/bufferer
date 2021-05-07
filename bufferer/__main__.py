@@ -36,6 +36,7 @@ Usage:
                 [--audio-disable]
                 [--black-frame]
                 [--force-framerate]
+                [--freeze]
                 [--verbose] [--version]
 
     -h --help                     show help message
@@ -57,6 +58,7 @@ Usage:
     -c --black-frame              start with a black frame if there is buffering at position 0.0
     --audio-disable               disable audio for the output, even if input contains audio
     --force-framerate             force output framerate to be the same as the input video file
+    --freeze                      insert frame freezes with skipping (without indicator) at the <buflist> locations and durations 
     --verbose                     show verbose output
     --version                     show version
 """
@@ -91,6 +93,7 @@ class Bufferer:
         self.audio_disable = arguments["--audio-disable"]
         self.black_frame = arguments["--black-frame"]
         self.force_framerate = arguments["--force-framerate"]
+        self.freeze = arguments["--freeze"]
 
         try:
             self.buflist = json.loads(arguments["--buflist"])
@@ -112,6 +115,8 @@ class Bufferer:
         # video / audio attributes
         self.fps = None
         self.samplerate = None
+        self.video_resolution = None
+        self.input_duration = None
 
         # get info needed for processing
         self.parse_input()
@@ -159,6 +164,10 @@ class Bufferer:
             fps_match = fps_pattern.search(video_line)
             if fps_match:
                 self.fps = float(fps_match.group(1))
+            video_resolution_pattern = re.compile(r".*, ([0-9.]+x[0-9.]+),.*")
+            video_resolution_match = video_resolution_pattern.search(video_line)
+            if video_resolution_match:
+                self.video_resolution = video_resolution_match.group(1)
 
         if audio_regex.search(output) and not self.audio_disable:
             self.has_audio = True
@@ -171,9 +180,12 @@ class Bufferer:
         if not (self.has_audio or self.has_video):
             raise Exception("[error] file has no video or audio stream")
 
-        if not (self.fps or self.samplerate):
+        input_duration_pattern = re.compile(r".* Duration: ([0-9.]+:[0-9.]+:[0-9.]+\.[0-9.]+), .*")
+        self.input_duration = input_duration_pattern.search(output).group(1)
+
+        if not (self.fps or self.samplerate or self.video_resolution):
             raise Exception(
-                "[error] could not find video stream or detect fps / samplerate"
+                "[error] could not find video stream or detect fps / samplerate / resolution"
             )
 
     def generate_loop_cmds(self):

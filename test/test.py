@@ -50,7 +50,6 @@ def create_tmp_video():
     ]
 
     pretty_print_command(tmp_video_cmd)
-
     subprocess.check_output(tmp_video_cmd)
 
     return tmp_video_in, tmp_video_out

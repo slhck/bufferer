@@ -2,9 +2,9 @@
 
 [![PyPI version](https://img.shields.io/pypi/v/bufferer.svg)](https://pypi.org/project/bufferer)
 
-Inserts fake rebuffering events into video.
+Inserts fake rebuffering events into video, optionally with skipping frames.
 
-Author: Werner Robitza <werner.robitza@gmail.com>
+Author: Werner Robitza <werner.robitza@gmail.com> with contributions from David Lindero.
 
 ![](preview.gif)
 
@@ -44,6 +44,7 @@ Or clone this repository, then run the tool with `python -m bufferer`.
                 [--audio-disable]
                 [--black-frame]
                 [--force-framerate]
+                [--skipping]
                 [--verbose] [--version]
 
     -h --help                     show help message
@@ -65,6 +66,7 @@ Or clone this repository, then run the tool with `python -m bufferer`.
     -c --black-frame              start with a black frame if there is buffering at position 0.0
     --audio-disable               disable audio for the output, even if input contains audio
     --force-framerate             force output framerate to be the same as the input video file
+    --skipping                    insert frame freezes with skipping (without indicator) at the <buflist> locations and durations
     --verbose                     show verbose output
     --version                     show version
 
@@ -91,6 +93,19 @@ ffmpeg \
 -f lavfi -i testsrc=duration=60:size=320x240:rate=60,format=pix_fmts=yuv420p \
 -i click_and_count.m4a
 <output>
+```
+
+A sample for input:
+
+```
+ffmpeg -y -f lavfi \
+    -i testsrc=duration=10:size=640x480:rate=60,format=pix_fmts=yuv420p \
+    -i spinners/click_and_count.m4a \
+    -vf 'drawtext=fontfile=/usr/share/fonts/truetype/ubuntu-font-family/UbuntuMono-R.ttf:text=%{n}:fontsize=72:r=60:x=(w-tw)/2: y=h-(2*lh): fontcolor=white: box=1: boxcolor=0x00000099' \
+    -shortest \
+    -c:v libx264 -preset ultrafast \
+    -c:a copy \
+    test/tmp.mp4
 ```
 
 Sample command to test buffering:

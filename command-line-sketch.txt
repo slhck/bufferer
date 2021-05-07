@@ -1,0 +1,28 @@
+First create black areas
+
+
+ffmpeg -i video.mp4 -f lavfi -i "color=black:s=1280x720:r=25" -filter_complex \
+"[0:v][1]overlay=enable='between(t,25,35)'[a]; \
+ [a][1]overlay=enable='between(t,80,90)'[b]; \
+ [b][1]overlay=enable='between(t,94,115)'[c]; \
+ ...
+ [n][1]overlay=enable='between(t,4805,4821)'[video]; \
+ [0:a]volume=0:enable='between(t,25,35)', \
+      volume=0:enable='between(t,80,90)', \
+      volume=0:enable='between(t,94,115)', \
+      ...
+      volume=0:enable='between(t,4805,4821)'[audio]" \
+-map "[video]" -map "[audio]"  output.mp4
+
+
+# Create black-video with audio muted at black areas
+ffmpeg -i 10s-audiovisual.avi -f lavfi -i "color=black:s=384x216:r=60" -filter_complex "[0:v][1]overlay=enable='between(t,2,2.083)'[av1];[av1][1]overlay=enable='between(t,3.000,3.033)'[video];[0:a]volume=0:enable='between(t,2,2.083)',volume=0:enable='between(t,3.000,3.033)'[audio]" -map "[video]" -map "[audio]" -t 10.0 -c:v ffv1 output.nut
+
+# Create black-video but just copy audio
+ffmpeg -i 10s-audiovisual.avi -f lavfi -i "color=black:s=384x216:r=60" -filter_complex "[0:v][1]overlay=enable='between(t,2,2.083)'[av1];[av1][1]overlay=enable='between(t,3.000,3.033)'[video]" -map "[video]" -map 0:a -t 10.0 -c:v ffv1 output.nut
+
+
+
+then replace black with last frame:
+
+ffmpeg -i output.nut -vf blackframe=0,metadata=select:key=lavfi.blackframe.pblack:value=50:function=less -vsync cfr -c:a copy -c:v ffv1 out_freeze.nut

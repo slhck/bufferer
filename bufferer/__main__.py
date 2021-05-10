@@ -197,6 +197,7 @@ class Bufferer:
         aloop_cmds = []
         venable_cmds = []
         aenable_cmds = []
+        vfreeze_cmds = []
 
         total_vlooped = 0
         total_alooped = 0
@@ -206,46 +207,54 @@ class Bufferer:
 
         for buf_event in self.buflist:
             buf_pos, buf_len = buf_event
-            buf_pos_enable = round(total_buf_len + buf_pos, 3)
-            buf_len_enable = round(buf_pos_enable + buf_len, 3)
+            if self.freeze:
+                freeze_pos = round(buf_pos, 3)
+                freeze_end_time = round(freeze_pos + buf_len, 3)
+                # buf_end_time = buf_pos + buf_len + 0.001
+                freeze_cmd = f"[1]overlay=enable='between(t,{freeze_pos},{freeze_end_time})'"
+                vfreeze_cmds.append(freeze_cmd)
+            else:
+                buf_pos_enable = round(total_buf_len + buf_pos, 3)
+                buf_len_enable = round(buf_pos_enable + buf_len, 3)
 
-            # FIXME: the enable time is slightly smaller than what one would expect, with video
-            buf_len_enable_video = buf_len_enable - 0.01
+                # FIXME: the enable time is slightly smaller than what one would expect, with video
+                buf_len_enable_video = buf_len_enable - 0.01
 
-            total_buf_len = total_buf_len + buf_len
+                total_buf_len = total_buf_len + buf_len
 
-            if self.has_video:
-                # offset buf_position by the total number of looped frames
-                buf_pos_frames = int(self.fps * buf_pos) + total_vlooped
-                # FIXME: the number of frames needs to be 1 shorter?
-                buf_len_frames = int(self.fps * buf_len)
+                if self.has_video:
+                    # offset buf_position by the total number of looped frames
+                    buf_pos_frames = int(self.fps * buf_pos) + total_vlooped
+                    # FIXME: the number of frames needs to be 1 shorter?
+                    buf_len_frames = int(self.fps * buf_len)
 
-                loop_cmd = f"loop=loop={buf_len_frames}:size=1:start={buf_pos_frames},setpts=N/FRAME_RATE/TB"
-                vloop_cmds.append(loop_cmd)
+                    loop_cmd = f"loop=loop={buf_len_frames}:size=1:start={buf_pos_frames},setpts=N/FRAME_RATE/TB"
+                    vloop_cmds.append(loop_cmd)
 
-                total_vlooped += buf_len_frames
+                    total_vlooped += buf_len_frames
 
-                venable_cmd = f"between(t,{buf_pos_enable},{buf_len_enable_video})"
-                venable_cmds.append(venable_cmd)
+                    venable_cmd = f"between(t,{buf_pos_enable},{buf_len_enable_video})"
+                    venable_cmds.append(venable_cmd)
 
-            if self.has_audio:
-                # offset buf_position by the total number of looped samples
-                buf_pos_samples = int(self.samplerate * buf_pos) + total_alooped
-                buf_len_samples = int(self.samplerate * buf_len)
+                if self.has_audio:
+                    # offset buf_position by the total number of looped samples
+                    buf_pos_samples = int(self.samplerate * buf_pos) + total_alooped
+                    buf_len_samples = int(self.samplerate * buf_len)
 
-                aloop_cmd = f"aloop=loop={buf_len_samples}:size=1:start={buf_pos_samples},asetpts=N/SAMPLE_RATE/TB"
-                aloop_cmds.append(aloop_cmd)
+                    aloop_cmd = f"aloop=loop={buf_len_samples}:size=1:start={buf_pos_samples},asetpts=N/SAMPLE_RATE/TB"
+                    aloop_cmds.append(aloop_cmd)
 
-                total_alooped += buf_len_samples
+                    total_alooped += buf_len_samples
 
-                aenable_cmd = f"between(t,{buf_pos_enable},{buf_len_enable})"
-                aenable_cmds.append(aenable_cmd)
+                    aenable_cmd = f"between(t,{buf_pos_enable},{buf_len_enable})"
+                    aenable_cmds.append(aenable_cmd)
 
-            if int(buf_pos_enable) == 0:
-                self.enable_black_cmd = f"between(t,0,{buf_len_enable_video})"
+                if int(buf_pos_enable) == 0:
+                    self.enable_black_cmd = f"between(t,0,{buf_len_enable_video})"
 
         self.vloop_cmd = (",").join(vloop_cmds)
         self.aloop_cmd = (",").join(aloop_cmds)
+        self.vfreeze_cmds = vfreeze_cmds
         self.venable_cmd = ("+").join(venable_cmds)
         self.aenable_cmd = ("+").join(aenable_cmds)
 
@@ -360,6 +369,75 @@ class Bufferer:
 
         self.run_command(combine_cmd)
 
+    def insert_black_frames(self):
+        """
+        Insert black frames into the video file where the freeze frames will be
+        """
+        base_cmd = self._get_base_cmd()
+
+        synthetic_black_video_cmd = ["-f", "lavfi", "-i", f"color=black:s={self.video_resolution}:r={self.fps}"]
+        base_cmd.extend(synthetic_black_video_cmd)
+
+        vfilters = []
+        filter_interface_list = ["[0:v]", ]
+
+        if len(self.vfreeze_cmds) > 1:
+            for ii in range(0, len(self.vfreeze_cmds)-1):
+                filter_interface_list.append(f"[av{ii}]")
+        filter_interface_list.append("[outv]")
+
+        remaining_vfreeze_cmds = self.vfreeze_cmds
+        for ii, jj in enumerate(filter_interface_list[:-1]):
+            filter_string = f"{filter_interface_list[ii]}{remaining_vfreeze_cmds.pop(0)}{filter_interface_list[ii+1]}"
+            vfilters.append(filter_string)
+
+        filters = [";".join(vfilters)]
+
+        base_cmd.extend(["-filter_complex", ";".join(filters)])
+        base_cmd.extend(["-map", "[outv]"])
+        if self.has_audio:
+            base_cmd.extend(["-map", "0:a", "-c:a", self.acodec])
+        else:
+            base_cmd.extend(["-an", ])
+        base_cmd.extend(["-c:v", self.vcodec, "-pix_fmt", self.pixfmt])
+        base_cmd.extend(["-t", self.input_duration])
+        base_cmd.append(self._get_tmp_filename("video"))
+
+        self.run_command(base_cmd)
+
+    def apply_freezing(self):
+
+        freeze_on_black_cmd = [
+            "ffmpeg",
+            self.overwrite_spec,
+        ]
+
+        freeze_on_black_cmd.extend([
+                "-i",
+                self._get_tmp_filename("video"),
+            ])
+
+        freeze_on_black_cmd.extend([
+                "-vf",
+                "blackframe=0,metadata=select:key=lavfi.blackframe.pblack:value=50:function=less",
+            ])
+
+        if self.has_audio:
+            freeze_on_black_cmd.extend(["-c:a", "copy"])
+        else:
+            freeze_on_black_cmd.extend(["-an", ])
+
+        freeze_on_black_cmd.extend([
+                "-c:v",
+                self.vcodec,
+                "-vsync",
+                "cfr",
+                self.output_file
+            ])
+
+        # ffmpeg -i output.nut -vf blackframe=0,metadata=select:key=lavfi.blackframe.pblack:value=50:function=less -vsync cfr -c:a copy -c:v ffv1
+        self.run_command(freeze_on_black_cmd)
+
     def _get_base_cmd(self):
         """
         Get the base command to build the ffmpeg command
@@ -399,19 +477,28 @@ class Bufferer:
         tmp_file_list = []
 
         try:
-            if self.has_video:
+            if self.freeze:
                 if self.verbose:
-                    print("[info] running command for processing video")
-                self.insert_buf_video()
+                    print("[info] running command for inserting black frames")
+                self.insert_black_frames()
                 tmp_file_list.append(self._get_tmp_filename("video"))
-            if self.has_audio:
                 if self.verbose:
-                    print("[info] running command for processing audio")
-                self.insert_buf_audio()
-                tmp_file_list.append(self._get_tmp_filename("audio"))
-            if self.verbose:
-                print("[info] running command for merging video/audio")
-            self.merge_audio_video()
+                    print("[info] running command for looping frozen image")
+                self.apply_freezing()
+            else:
+                if self.has_video:
+                    if self.verbose:
+                        print("[info] running command for processing video")
+                    self.insert_buf_video()
+                    tmp_file_list.append(self._get_tmp_filename("video"))
+                if self.has_audio:
+                    if self.verbose:
+                        print("[info] running command for processing audio")
+                    self.insert_buf_audio()
+                    tmp_file_list.append(self._get_tmp_filename("audio"))
+                if self.verbose:
+                    print("[info] running command for merging video/audio")
+                self.merge_audio_video()
         except Exception as e:
             print(f"[error] error running processing: {e}")
         finally:

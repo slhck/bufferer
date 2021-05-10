@@ -21,8 +21,16 @@ ffmpeg -i 10s-audiovisual.avi -f lavfi -i "color=black:s=384x216:r=60" -filter_c
 # Create black-video but just copy audio
 ffmpeg -i 10s-audiovisual.avi -f lavfi -i "color=black:s=384x216:r=60" -filter_complex "[0:v][1]overlay=enable='between(t,2,2.083)'[av1];[av1][1]overlay=enable='between(t,3.000,3.033)'[video]" -map "[video]" -map 0:a -t 10.0 -c:v ffv1 output.nut
 
+## same w/o audio
+ffmpeg -i 10s-audiovisual.avi -f lavfi -i "color=black:s=384x216:r=60" -filter_complex "[0:v][1]overlay=enable='between(t,2,2.083)'[av1];[av1][1]overlay=enable='between(t,3.000,3.033)'[video]" -map "[video]" -an -t 10.0 -c:v ffv1 output.nut
 
 
 then replace black with last frame:
 
 ffmpeg -i output.nut -vf blackframe=0,metadata=select:key=lavfi.blackframe.pblack:value=50:function=less -vsync cfr -c:a copy -c:v ffv1 out_freeze.nut
+
+
+
+###
+
+self._get_base_cmd()

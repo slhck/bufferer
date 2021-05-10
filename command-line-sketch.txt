@@ -34,3 +34,24 @@ ffmpeg -i output.nut -vf blackframe=0,metadata=select:key=lavfi.blackframe.pblac
 ###
 
 self._get_base_cmd()
+
+
+
+# This results in one extra frame that should be removed at 18x-something
+python3 -m bufferer -i ../example-databases/P2LXM00/srcVid/10s-audiovisual.avi -e -b "[[2, 1.0], [3.1, 0.1166666666667]]" --force-framerate -o ../example-databases/P2SXM00/srcVid/10s-audiovisual_out_3.avi --verbose --freeze --audio-disable
+
+
+
+
+
+
+
+
+
+
+ffmpeg -i in.mp4 -filter_complex 
+[0:v]trim=start=10.0:end=15.0,setpts=PTS-STARTPTS,format=yuv420p[0v];
+[0:a]atrim=start=10.0:end=15.0,asetpts=PTS-STARTPTS[0a];
+[0:v]trim=start=65.0:end=70.0,setpts=PTS-STARTPTS,format=yuv420p[1v];
+[0:a]atrim=start=65.0:end=70.0,asetpts=PTS-STARTPTS[1a];[0v][0a][1v]
+[1a]concat=n=2:v=1:a=1[outv][outa] -map [outv] -map [outa] out.mp4

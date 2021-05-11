@@ -6,6 +6,7 @@ import os
 import sys
 import unittest
 import subprocess
+import shlex
 
 from pathlib import Path
 
@@ -15,11 +16,14 @@ sys.path.insert(0, ROOT_PATH)
 from bufferer.__main__ import Bufferer
 
 
+def pretty_print_command(cmd):
+    print(" ".join([shlex.quote(s) for s in cmd]))
+
+
 def bufferer_call(args, env=None):
     cmd = [sys.executable, '-m', 'bufferer', '--verbose']
     cmd.extend(args)
-    print()
-    print(" ".join(cmd))
+    pretty_print_command(cmd)
     p = subprocess.Popen(
         cmd,
         stdout=subprocess.PIPE,
@@ -39,12 +43,13 @@ def create_tmp_video():
     tmp_video_cmd = [
         "ffmpeg", "-y", "-f", "lavfi", "-i", "testsrc=duration=10:size=640x480:rate=60,format=pix_fmts=yuv420p",
         "-i", os.path.join(ROOT_PATH, 'spinners', 'click_and_count.m4a'),
+        "-vf", "drawtext=fontfile=/usr/share/fonts/truetype/ubuntu-font-family/UbuntuMono-R.ttf:text=%{n}:fontsize=72:r=60:x=(w-tw)/2: y=h-(2*lh): fontcolor=white: box=1: boxcolor=0x00000099",
         "-shortest",
         "-c:v", "libx264", "-preset", "ultrafast", "-c:a", "copy",
         tmp_video_in
     ]
 
-    print(tmp_video_cmd)
+    pretty_print_command(tmp_video_cmd)
 
     subprocess.check_output(tmp_video_cmd)
 

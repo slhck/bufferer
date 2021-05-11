@@ -39,6 +39,7 @@ def create_tmp_video():
     tmp_video_cmd = [
         "ffmpeg", "-y", "-f", "lavfi", "-i", "testsrc=duration=10:size=640x480:rate=60,format=pix_fmts=yuv420p",
         "-i", os.path.join(ROOT_PATH, 'spinners', 'click_and_count.m4a'),
+        "-vf", "drawtext=fontfile=/usr/share/fonts/truetype/ubuntu-font-family/UbuntuMono-R.ttf:text=%{n}:fontsize=72:r=60:x=(w-tw)/2: y=h-(2*lh): fontcolor=white: box=1: boxcolor=0x00000099",
         "-shortest",
         "-c:v", "libx264", "-preset", "ultrafast", "-c:a", "copy",
         tmp_video_in

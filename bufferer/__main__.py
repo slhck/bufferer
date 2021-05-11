@@ -205,18 +205,12 @@ class Bufferer:
 
         self.enable_black_cmd = None
 
+        # trim_cmds are only used for freeze
         trim_cmds = []
         last_buf_end = 0
 
         for buf_event in self.buflist:
             buf_pos, buf_len = buf_event
-            # if self.freeze:
-            #     freeze_pos = round(buf_pos, 3)
-            #     freeze_end_time = round(freeze_pos + buf_len, 3)
-            #     # buf_end_time = buf_pos + buf_len + 0.001
-            #     freeze_cmd = f"[1]overlay=enable='between(t,{freeze_pos},{freeze_end_time})'"
-            #     vfreeze_cmds.append(freeze_cmd)
-            # else:
             buf_pos_enable = round(total_buf_len + buf_pos, 3)
             buf_len_enable = round(buf_pos_enable + buf_len, 3)
 
@@ -241,14 +235,9 @@ class Bufferer:
                 venable_cmd = f"between(t,{buf_pos_enable},{buf_len_enable_video})"
                 venable_cmds.append(venable_cmd)
 
-                # for freezing, trim up to (and including) the end of the stalling event.
-                # print(last_buf_end)
-                # print(buf_pos_enable)
-                # print(buf_len_enable_video)
-                # quit()
-                trim_cmd = f"trim=start={last_buf_end}:end={buf_len_enable},setpts=PTS-STARTPTS"
+                trim_cmd = f"trim=start_frame={last_buf_end}:end_frame={buf_pos_frames + buf_len_frames},setpts=PTS-STARTPTS"
                 trim_cmds.append(trim_cmd)
-                last_buf_end = buf_pos_enable + 2*buf_len
+                last_buf_end = buf_pos_frames + 2*buf_len_frames
 
             if self.has_audio:
                 # offset buf_position by the total number of looped samples
@@ -267,7 +256,8 @@ class Bufferer:
                 self.enable_black_cmd = f"between(t,0,{buf_len_enable_video})"
 
         # needs an extra trim at the end to get the end of the file
-        trim_cmd = f"trim=start={last_buf_end}:end={self._get_duration_in_seconds() + total_buf_len},setpts=PTS-STARTPTS"
+        duration_in_frames = int(self._get_duration_in_seconds() * self.fps) + total_vlooped
+        trim_cmd = f"trim=start_frame={last_buf_end}:end_frame={duration_in_frames},setpts=PTS-STARTPTS"
         trim_cmds.append(trim_cmd)
 
         self.vloop_cmd = (",").join(vloop_cmds)
@@ -346,6 +336,9 @@ class Bufferer:
         self.run_command(base_cmd)
 
     def trim_video(self):
+        """
+        Remove frames after the frozen, repeated, ones to emulate freezing with skipping
+        """
         trim_extra_frames = [
             "ffmpeg",
             self.overwrite_spec,
@@ -529,13 +522,13 @@ class Bufferer:
             self.merge_audio_video()
         except Exception as e:
             print(f"[error] error running processing: {e}")
-        # finally:
-        #     if not self.dry:
-        #         for file in tmp_file_list:
-        #             if os.path.isfile(file):
-        #                 os.remove(file)
-        #             else:
-        #                 print(f"[warn] temporary file {file} not found!")
+        finally:
+            if not self.dry:
+                for file in tmp_file_list:
+                    if os.path.isfile(file):
+                        os.remove(file)
+                    else:
+                        print(f"[warn] temporary file {file} not found!")
 
 
 def main():

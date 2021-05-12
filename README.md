@@ -2,9 +2,9 @@
 
 [![PyPI version](https://img.shields.io/pypi/v/bufferer.svg)](https://pypi.org/project/bufferer)
 
-Inserts fake rebuffering events into video.
+Inserts fake rebuffering events into video, optionally with skipping frames.
 
-Author: Werner Robitza <werner.robitza@gmail.com>
+Author: Werner Robitza <werner.robitza@gmail.com> with contributions from David Lindero.
 
 ![](preview.gif)
 
@@ -44,6 +44,7 @@ Or clone this repository, then run the tool with `python -m bufferer`.
                 [--audio-disable]
                 [--black-frame]
                 [--force-framerate]
+                [--skipping]
                 [--verbose] [--version]
 
     -h --help                     show help message
@@ -65,6 +66,7 @@ Or clone this repository, then run the tool with `python -m bufferer`.
     -c --black-frame              start with a black frame if there is buffering at position 0.0
     --audio-disable               disable audio for the output, even if input contains audio
     --force-framerate             force output framerate to be the same as the input video file
+    --skipping                    insert frame freezes with skipping (without indicator) at the <buflist> locations and durations
     --verbose                     show verbose output
     --version                     show version
 

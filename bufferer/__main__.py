@@ -36,7 +36,7 @@ Usage:
                 [--audio-disable]
                 [--black-frame]
                 [--force-framerate]
-                [--freeze]
+                [--skipping]
                 [--verbose] [--version]
 
     -h --help                     show help message
@@ -58,7 +58,7 @@ Usage:
     -c --black-frame              start with a black frame if there is buffering at position 0.0
     --audio-disable               disable audio for the output, even if input contains audio
     --force-framerate             force output framerate to be the same as the input video file
-    --skipping                    insert frame freezes with skipping (without indicator) at the <buflist> locations and durations 
+    --skipping                    insert frame freezes with skipping (without indicator) at the <buflist> locations and durations
     --verbose                     show verbose output
     --version                     show version
 """
@@ -100,12 +100,12 @@ class Bufferer:
             self.buflist = json.loads(arguments["--buflist"])
             if not isinstance(self.buflist[0], list):
                 self.buflist = [self.buflist]
-        except Exception as e:
+        except Exception:
             buflist_mod = "[" + arguments["--buflist"] + "]"
             try:
                 self.buflist = json.loads(buflist_mod)
-            except Exception as e:
-                raise Exception(
+            except Exception:
+                raise RuntimeError(
                     "Buffering list parameter not properly formatted. Use a list like [[0, 1], [5, 10]]"
                 )
 
@@ -120,7 +120,7 @@ class Bufferer:
         self.input_duration = None
 
         # get info needed for processing
-        self.parse_input()
+        self._parse_input()
 
     def run_command(self, cmd):
         """
@@ -143,7 +143,7 @@ class Bufferer:
             print(stderr.decode("utf-8"))
             sys.exit(1)
 
-    def parse_input(self):
+    def _parse_input(self):
         """
         Parse various info from the input file
         """
@@ -179,18 +179,22 @@ class Bufferer:
                 self.samplerate = float(hz_match.group(1))
 
         if not (self.has_audio or self.has_video):
-            raise Exception("[error] file has no video or audio stream")
+            raise RuntimeError("[error] file has no video or audio stream")
 
         input_duration_pattern = re.compile(r".* Duration: ([0-9.]+:[0-9.]+:[0-9.]+\.[0-9.]+), .*")
         if input_duration_pattern.search(output):
             self.input_duration = input_duration_pattern.search(output).group(1)
 
-        if not (self.fps or self.samplerate or self.video_resolution or self.input_duration):
-            raise Exception(
-                "[error] could not find video stream or detect fps / samplerate / resolution / duration"
-            )
+        if not self.fps:
+            raise RuntimeError("Could not detect video fps from input file!")
+        if self.has_audio and not self.samplerate:
+            raise RuntimeError("Could not detect audio sample rate from input file!")
+        if self.has_video and not self.video_resolution:
+            raise RuntimeError("Could not detect video resolution from input file!")
+        if not self.input_duration:
+            raise RuntimeError("Could not detect duration from input file!")
 
-    def generate_loop_cmds(self):
+    def _generate_loop_cmds(self):
         """
         Construct the looping commands
         """
@@ -216,8 +220,6 @@ class Bufferer:
             buf_len_enable = round(buf_pos_enable + buf_len, 3)
 
             # FIXME: the enable time is slightly smaller than what one would expect, with video
-            # Trying with 0.001 instead of .01
-
             buf_len_enable_video = buf_len_enable - 0.001
 
             total_buf_len = total_buf_len + buf_len
@@ -257,6 +259,9 @@ class Bufferer:
                 self.enable_black_cmd = f"between(t,0,{buf_len_enable_video})"
 
         # needs an extra trim at the end to get the end of the file
+        if self.fps is None:
+            raise RuntimeError("fps not specified!")
+
         duration_in_frames = int(self._get_duration_in_seconds() * self.fps) + total_vlooped
         trim_cmd = f"trim=start_frame={last_buf_end}:end_frame={duration_in_frames},setpts=PTS-STARTPTS"
         trim_cmds.append(trim_cmd)
@@ -267,7 +272,7 @@ class Bufferer:
         self.venable_cmd = ("+").join(venable_cmds)
         self.aenable_cmd = ("+").join(aenable_cmds)
 
-    def set_specs(self):
+    def _set_specs(self):
         """
         set various ffmpeg options
         """
@@ -297,7 +302,7 @@ class Bufferer:
                     [
                         f"[0:v]{self.vloop_cmd}[stallvid]",
                         f"color=c=black:r={self.fps}[black]",
-                        f"[black][stallvid]scale2ref[black2][stallvid]",
+                        "[black][stallvid]scale2ref[black2][stallvid]",
                         f"[stallvid][black2]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2:shortest=1:enable='{self.enable_black_cmd}'[stallvid2]",
                     ]
                 )
@@ -486,8 +491,9 @@ class Bufferer:
         """
         Convert between the HH:MM:SS.sss format, to total number of seconds.
         """
-        input_duration = self.input_duration
-        h, m, s = input_duration.split(':')
+        if self.input_duration is None:
+            raise RuntimeError("Input duration not specified")
+        h, m, s = self.input_duration.split(':')
         time_in_seconds = float(datetime.timedelta(hours=int(h), minutes=int(m), seconds=float(s)).total_seconds())
         return time_in_seconds
 
@@ -505,8 +511,8 @@ class Bufferer:
         frames and audio samples at the corresponding positions.
         """
 
-        self.generate_loop_cmds()
-        self.set_specs()
+        self._generate_loop_cmds()
+        self._set_specs()
 
         tmp_file_list = []
 
@@ -548,12 +554,12 @@ def main():
         raise IOError("Input file does not exist")
 
     if not arguments["--buflist"]:
-        raise Exception("No buffering list given, please specify --buflist")
+        raise RuntimeError("No buffering list given, please specify --buflist")
     b = Bufferer(arguments)
     try:
         b.insert_buf_audiovisual()
     except Exception as e:
-        raise Exception("Error while converting: " + str(e))
+        raise RuntimeError("Error while converting: " + str(e))
 
     if arguments["--verbose"]:
         print("Output written to " + b.output_file)

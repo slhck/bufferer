@@ -1,6 +1,17 @@
 # Changelog
 
 
+## v0.20.0 (2021-05-12)
+
+* Allow freezing with skipping.
+
+* Update gitignore.
+
+* Update test.py.
+
+  patched test video with numbering (assuming ubuntu-path to font)
+
+
 ## v0.19.1 (2021-05-06)
 
 * Fix support for no audio (#6)

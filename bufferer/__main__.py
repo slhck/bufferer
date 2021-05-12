@@ -58,7 +58,7 @@ Usage:
     -c --black-frame              start with a black frame if there is buffering at position 0.0
     --audio-disable               disable audio for the output, even if input contains audio
     --force-framerate             force output framerate to be the same as the input video file
-    --freeze                      insert frame freezes with skipping (without indicator) at the <buflist> locations and durations 
+    --skipping                    insert frame freezes with skipping (without indicator) at the <buflist> locations and durations 
     --verbose                     show verbose output
     --version                     show version
 """
@@ -94,7 +94,7 @@ class Bufferer:
         self.audio_disable = arguments["--audio-disable"]
         self.black_frame = arguments["--black-frame"]
         self.force_framerate = arguments["--force-framerate"]
-        self.freeze = arguments["--freeze"]
+        self.skipping = arguments["--skipping"]
 
         try:
             self.buflist = json.loads(arguments["--buflist"])
@@ -182,11 +182,12 @@ class Bufferer:
             raise Exception("[error] file has no video or audio stream")
 
         input_duration_pattern = re.compile(r".* Duration: ([0-9.]+:[0-9.]+:[0-9.]+\.[0-9.]+), .*")
-        self.input_duration = input_duration_pattern.search(output).group(1)
+        if input_duration_pattern.search(output):
+            self.input_duration = input_duration_pattern.search(output).group(1)
 
-        if not (self.fps or self.samplerate or self.video_resolution):
+        if not (self.fps or self.samplerate or self.video_resolution or self.input_duration):
             raise Exception(
-                "[error] could not find video stream or detect fps / samplerate / resolution"
+                "[error] could not find video stream or detect fps / samplerate / resolution / duration"
             )
 
     def generate_loop_cmds(self):
@@ -372,7 +373,7 @@ class Bufferer:
                 self.vcodec,
                 "-vsync",
                 "cfr",
-                self._get_tmp_filename("freeze"),
+                self._get_tmp_filename("skipping"),
             ])
 
         self.run_command(trim_extra_frames)
@@ -381,7 +382,7 @@ class Bufferer:
         """
         Merge the audio and video files
         """
-        if self.freeze:
+        if self.skipping:
             if self.has_audio and self.has_video:
                 output_codec_options = ["-map", "0:v", "-map", "1:a"]
             else:
@@ -421,10 +422,10 @@ class Bufferer:
         ]
 
         if self.has_video:
-            if self.freeze:
+            if self.skipping:
                 combine_cmd.extend([
                     "-i",
-                    self._get_tmp_filename("freeze"),
+                    self._get_tmp_filename("skipping"),
                 ])
             else:
                 combine_cmd.extend([
@@ -433,7 +434,7 @@ class Bufferer:
                 ])
 
         if self.has_audio:
-            if self.freeze:
+            if self.skipping:
                 combine_cmd.extend([
                     "-i",
                     self.input_file,
@@ -445,7 +446,7 @@ class Bufferer:
                 ])
 
         output_duration_options = None
-        if self.freeze:
+        if self.skipping:
             output_duration_options = ["-t", self.input_duration]
         if self.trim:
             output_duration_options = self.trim_spec
@@ -491,7 +492,7 @@ class Bufferer:
         return time_in_seconds
 
     def _get_tmp_filename(self, what="video"):
-        if what not in ["video", "audio", "freeze"]:
+        if what not in ["video", "audio", "skipping"]:
             raise RuntimeError("Call _get_tmp_filename with video/audio/freeze!")
 
         suffix = f"_{what}.nut"
@@ -515,11 +516,11 @@ class Bufferer:
                     print("[info] running command for processing video")
                 self.insert_buf_video()
                 tmp_file_list.append(self._get_tmp_filename("video"))
-            if self.freeze:
+            if self.skipping:
                 if self.verbose:
                     print("[info] running command for trimming video")
                 self.trim_video()
-                tmp_file_list.append(self._get_tmp_filename("freeze"))
+                tmp_file_list.append(self._get_tmp_filename("skipping"))
             else:
                 if self.has_audio:
                     if self.verbose:

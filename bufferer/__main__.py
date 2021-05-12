@@ -444,10 +444,19 @@ class Bufferer:
                     self._get_tmp_filename("audio"),
                 ])
 
+        output_duration_options = None
+        if self.freeze:
+            output_duration_options = ["-t", self.input_duration]
+        if self.trim:
+            output_duration_options = self.trim_spec
+
+        if output_duration_options:
+            combine_cmd.extend([
+                *output_duration_options
+            ])
+
         combine_cmd.extend([
             *output_codec_options,
-            "-t",
-            self.input_duration,
             self.output_file,
         ])
 
@@ -467,8 +476,8 @@ class Bufferer:
             self.input_file,
         ]
 
-        if self.trim_spec:
-            base_cmd.extend(self.trim_spec)
+        # if self.trim_spec:
+        #     base_cmd.extend(self.trim_spec)
 
         return base_cmd
 

@@ -165,7 +165,7 @@ class Bufferer:
             fps_match = fps_pattern.search(video_line)
             if fps_match:
                 self.fps = float(fps_match.group(1))
-            video_resolution_pattern = re.compile(r".*, ([0-9.]+x[0-9.]+),.*")
+            video_resolution_pattern = re.compile(r".*, (\d+x\d+)[, ].*")
             video_resolution_match = video_resolution_pattern.search(video_line)
             if video_resolution_match:
                 self.video_resolution = video_resolution_match.group(1)

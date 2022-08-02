@@ -1,6 +1,13 @@
 # Changelog
 
 
+## v0.20.1 (2022-08-02)
+
+* Update python requirements.
+
+* Update readme.
+
+
 ## v0.20.0 (2021-05-12)
 
 * Allow freezing with skipping.

@@ -36,7 +36,7 @@ setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
     ],
-    python_requires=">=3.5",
+    python_requires=">=3.7",
     package_data={"": ["spinners/*"]},
     packages=["bufferer"],
     install_requires=["docopt"],

@@ -20,7 +20,7 @@ Contents:
 
 ## Requirements
 
-- Python 3.6 or higher
+- Python 3.7 or higher
 - FFmpeg:
     - download a static build from [their website](http://ffmpeg.org/download.html))
     - put the `ffmpeg` executable in your `$PATH`
@@ -33,42 +33,43 @@ Or clone this repository, then run the tool with `python -m bufferer`.
 
 ## Usage
 
-    Usage:
-    bufferer    [-hfne] -i <input> -b <buflist> -o <output>
-                [-v <vcodec>] [-a <acodec>]
-                [-x <pixfmt>]
-                [-s <spinner>] [--disable-spinner] [-p <speed>]
-                [-t <trim>]
-                [-r <brightness>]
-                [-l <blur>]
-                [--audio-disable]
-                [--black-frame]
-                [--force-framerate]
-                [--skipping]
-                [--verbose] [--version]
+```
+bufferer    [-hfne] -i <input> -b <buflist> -o <output>
+            [-v <vcodec>] [-a <acodec>]
+            [-x <pixfmt>]
+            [-s <spinner>] [--disable-spinner] [-p <speed>]
+            [-t <trim>]
+            [-r <brightness>]
+            [-l <blur>]
+            [--audio-disable]
+            [--black-frame]
+            [--force-framerate]
+            [--skipping]
+            [--verbose] [--version]
 
-    -h --help                     show help message
-    -f --force                    force overwrite output files
-    -n --dry-run                  only print final command, do not run
-    -i --input <input>            input video file
-    -b --buflist <buflist>        list of buffering events in format "[[x1,y1], [x2,y2],...]" or
-                                  "[x1,y1], [x2,y2], ..." where x = position of event in seconds, y = duration of event
-    -o --output <output>          output video file
-    -v --vcodec <vcodec>          video encoder to use (see `ffmpeg -encoders`) [default: ffv1]
-    -a --acodec <acodec>          audio encoder to use (see `ffmpeg -encoders`) [default: pcm_s16le]
-    -x --pixfmt <pixfmt>          set pixel format for output [default: yuv420p]
-    -s --spinner <spinner>        path to spinner animated file or video [default: spinners/spinner-256-white.png]
-    -e --disable-spinner          disable spinner, just show stopped video
-    -p --speed <speed>            speed of the spinner, rounded to integer [default: 2]
-    -t --trim <trim>              trim video to length in seconds or "HH:MM:SS.msec" format
-    -r --brightness <brightness>  change brightness during buffering, use values between -1.0 and 1.0 [default: 0.0]
-    -l --blur <blur>              change blur during buffering, value specifies kernel size [default: 5]
-    -c --black-frame              start with a black frame if there is buffering at position 0.0
-    --audio-disable               disable audio for the output, even if input contains audio
-    --force-framerate             force output framerate to be the same as the input video file
-    --skipping                    insert frame freezes with skipping (without indicator) at the <buflist> locations and durations
-    --verbose                     show verbose output
-    --version                     show version
+-h --help                     show help message
+-f --force                    force overwrite output files
+-n --dry-run                  only print final command, do not run
+-i --input <input>            input video file
+-b --buflist <buflist>        list of buffering events in format "[[x1,y1], [x2,y2],...]" or
+                                "[x1,y1], [x2,y2], ..." where x = position of event in seconds, y = duration of event
+-o --output <output>          output video file
+-v --vcodec <vcodec>          video encoder to use (see `ffmpeg -encoders`) [default: ffv1]
+-a --acodec <acodec>          audio encoder to use (see `ffmpeg -encoders`) [default: pcm_s16le]
+-x --pixfmt <pixfmt>          set pixel format for output [default: yuv420p]
+-s --spinner <spinner>        path to spinner animated file or video [default: spinners/spinner-256-white.png]
+-e --disable-spinner          disable spinner, just show stopped video
+-p --speed <speed>            speed of the spinner, rounded to integer [default: 2]
+-t --trim <trim>              trim video to length in seconds or "HH:MM:SS.msec" format
+-r --brightness <brightness>  change brightness during buffering, use values between -1.0 and 1.0 [default: 0.0]
+-l --blur <blur>              change blur during buffering, value specifies kernel size [default: 5]
+-c --black-frame              start with a black frame if there is buffering at position 0.0
+--audio-disable               disable audio for the output, even if input contains audio
+--force-framerate             force output framerate to be the same as the input video file
+--skipping                    insert frame freezes with skipping (without indicator) at the <buflist> locations and durations
+--verbose                     show verbose output
+--version                     show version
+```
 
 ## Caveats
 
@@ -87,7 +88,7 @@ Or clone this repository, then run the tool with `python -m bufferer`.
 
 To generate AV sync samples:
 
-```
+```bash
 ffmpeg \
 -y \
 -f lavfi -i testsrc=duration=60:size=320x240:rate=60,format=pix_fmts=yuv420p \
@@ -97,7 +98,7 @@ ffmpeg \
 
 A sample for input:
 
-```
+```bash
 ffmpeg -y -f lavfi \
     -i testsrc=duration=10:size=640x480:rate=60,format=pix_fmts=yuv420p \
     -i spinners/click_and_count.m4a \
@@ -110,7 +111,7 @@ ffmpeg -y -f lavfi \
 
 Sample command to test buffering:
 
-```
+```bash
 ffmpeg \
 -y \
 -f lavfi -i testsrc=duration=60:size=320x240:rate=60,format=pix_fmts=yuv420p \
@@ -140,7 +141,7 @@ ffmpeg \
 
 ## License
 
-bufferer, Copyright (c) 2017-2021 Werner Robitza
+bufferer, Copyright (c) 2017-2022 Werner Robitza
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 

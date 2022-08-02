@@ -1,6 +1,11 @@
 # Changelog
 
 
+## v0.21.1 (2022-08-02)
+
+* Update python requirements.
+
+
 ## v0.20.1 (2022-08-02)
 
 * Update python requirements.

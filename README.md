@@ -17,6 +17,7 @@ Contents:
 - [Installation](#installation)
 - [Usage](#usage)
 - [Caveats](#caveats)
+- [API](#api)
 - [Acknowledgements](#acknowledgements)
 - [Helpful info](#helpful-info)
 - [Contributors](#contributors)
@@ -24,7 +25,7 @@ Contents:
 
 ## Requirements
 
-- Python 3.7 or higher
+- Python 3.8 or higher
 - FFmpeg:
     - download a static build from [their website](http://ffmpeg.org/download.html))
     - put the `ffmpeg` executable in your `$PATH`
@@ -80,6 +81,19 @@ bufferer    [-hfne] -i <input> -b <buflist> -o <output>
 - The time stamps for the buffering list must be given in media time. If, for example, you want an initial loading time of 5 seconds, and then a stalling event to occur 10 seconds into the video, specify `[[0, 5], [10, 5]]`.
 - You need to pick a proper output file format for the codecs you choose. Use `.avi` for the FFV1 and PCM WAV defaults.
 - Make sure to select the right pixel format as output, e.g. `--pixfmt yuv420p` for higher compatibility.
+
+## API
+
+The program exposes an API that you can use yourself:
+
+```python
+from bufferer import Bufferer
+
+b = Bufferer(input_video, output_video, buflist=[[0, 5], [10, 5]])
+b.insert_buf_audiovisual()
+```
+
+For more usage please read [the docs](https://htmlpreview.github.io/?https://github.com/slhck/bufferer/blob/master/docs/bufferer.html).
 
 ## Acknowledgements
 

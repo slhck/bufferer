@@ -1,18 +1,21 @@
 # Always prefer setuptools over distutils
-from setuptools import setup
-
 # To use a consistent encoding
 from codecs import open
 from os import path
+
+from setuptools import setup
 
 here = path.abspath(path.dirname(__file__))
 
 # read version string
 with open(path.join(here, "bufferer", "__init__.py")) as version_file:
-    version = eval(version_file.read().split(" = ")[1].strip())
+    for line in version_file:
+        if line.startswith("__version__"):
+            version = eval(line.split(" = ")[1])
+            break
 
 # Get the long description from the README file
-with open(path.join(here, "README.md"), encoding="utf-8") as f:
+with open(path.join(here, "README.md")) as f:
     long_description = f.read()
 
 setup(
@@ -31,12 +34,12 @@ setup(
         "Topic :: Multimedia :: Video",
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
     ],
-    python_requires=">=3.7",
+    python_requires=">=3.8",
     package_data={"": ["spinners/*"]},
     packages=["bufferer"],
     install_requires=["docopt"],

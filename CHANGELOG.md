@@ -1,6 +1,13 @@
 # Changelog
 
 
+## v0.21.2 (2023-01-07)
+
+* Add types, update python requirements, add github actions etc.
+
+* Docs: add @davidlindero as a contributor.
+
+
 ## v0.21.1 (2022-08-02)
 
 * Update python requirements.

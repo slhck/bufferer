@@ -5,6 +5,8 @@
 
 [![PyPI version](https://img.shields.io/pypi/v/bufferer.svg)](https://pypi.org/project/bufferer)
 
+[![Python package](https://github.com/slhck/bufferer/actions/workflows/python-package.yml/badge.svg)](https://github.com/slhck/bufferer/actions/workflows/python-package.yml)
+
 Inserts fake rebuffering events into video, optionally with skipping frames.
 
 Author: Werner Robitza <werner.robitza@gmail.com>

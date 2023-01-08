@@ -1,6 +1,13 @@
 # Changelog
 
 
+## v0.22.0 (2023-01-08)
+
+* Fix mypy call.
+
+* Fix tests and logging.
+
+
 ## v0.21.2 (2023-01-07)
 
 * Add types, update python requirements, add github actions etc.

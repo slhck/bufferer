@@ -1,6 +1,13 @@
 # Changelog
 
 
+## v0.22.1 (2023-01-08)
+
+* Add py.typed support.
+
+* Add github actions badge to README.
+
+
 ## v0.22.0 (2023-01-08)
 
 * Fix mypy call.

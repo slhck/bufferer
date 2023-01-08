@@ -40,7 +40,8 @@ setup(
         "Programming Language :: Python :: 3.11",
     ],
     python_requires=">=3.8",
-    package_data={"": ["spinners/*"]},
+    include_package_data=True,
+    package_data={"": ["spinners/*"], "bufferer": ["py.typed"]},
     packages=["bufferer"],
     install_requires=["docopt"],
     entry_points={

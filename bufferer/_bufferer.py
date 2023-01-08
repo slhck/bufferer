@@ -5,6 +5,7 @@ import json
 import logging
 import os
 import re
+import shlex
 import subprocess
 from typing import Optional
 
@@ -12,6 +13,33 @@ logger = logging.getLogger("bufferer")
 
 
 class Bufferer:
+    """
+    Bufferer class
+
+    Args:
+        input_file (str): Input file
+        output_file (str): Output file
+        buflist (list[list] | str): Buffering list
+        spinner (str, optional): Spinner image. Defaults to "spinners/spinner-256-white.png".
+        disable_spinner (bool, optional): Disable spinner. Defaults to False.
+        speed (int, optional): Speed of spinner. Defaults to 2.
+        trim (str | None, optional): Trim video. Defaults to None.
+        force_overwrite (bool, optional): Force overwrite of output file. Defaults to False.
+        dry (bool, optional): Dry run. Defaults to False.
+        vcodec (str, optional): Video codec. Defaults to "ffv1".
+        acodec (str, optional): Audio codec. Defaults to "pcm_s16le".
+        pixfmt (str, optional): Pixel format. Defaults to "yuv420p".
+        brightness (float, optional): Brightness of spinner. Defaults to 0.0.
+        blur (int, optional): Blur of spinner. Defaults to 5.
+        audio_disable (bool, optional): Disable audio. Defaults to False.
+        black_frame (bool, optional): Add black frame at the end. Defaults to False.
+        force_framerate (bool, optional): Force framerate. Defaults to False.
+        skipping (bool, optional): Enable skipping. Defaults to False.
+
+    Raises:
+        RuntimeError: Buffering list parameter not properly formatted. Use a list like [[0, 1], [5, 10]]
+    """
+
     def __init__(
         self,
         input_file: str,
@@ -26,7 +54,6 @@ class Bufferer:
         vcodec: str = "ffv1",
         acodec: str = "pcm_s16le",
         pixfmt: str = "yuv420p",
-        verbose: bool = False,
         brightness: float = 0.0,
         blur: int = 5,
         audio_disable: bool = False,
@@ -46,7 +73,6 @@ class Bufferer:
         self.vcodec = vcodec
         self.acodec = acodec
         self.pixfmt = pixfmt
-        self.verbose = verbose
         self.brightness = brightness
         self.blur = blur
         self.audio_disable = audio_disable
@@ -93,12 +119,9 @@ class Bufferer:
         Returns:
             Optional[str]: Output of the command
         """
-        if self.dry or self.verbose:
-            import shlex
-
-            logger.info(" ".join([shlex.quote(c) for c in cmd]))
-            if self.dry:
-                return None
+        logger.info(" ".join([shlex.quote(c) for c in cmd]))
+        if self.dry:
+            return None
 
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = process.communicate()
@@ -507,23 +530,19 @@ class Bufferer:
 
         try:
             if self.has_video:
-                if self.verbose:
-                    logger.info("running command for processing video")
+                logger.info("running command for processing video")
                 self.insert_buf_video()
                 tmp_file_list.append(self._get_tmp_filename("video"))
             if self.skipping:
-                if self.verbose:
-                    logger.info("running command for trimming video")
+                logger.info("running command for trimming video")
                 self.trim_video()
                 tmp_file_list.append(self._get_tmp_filename("skipping"))
             else:
                 if self.has_audio:
-                    if self.verbose:
-                        logger.info("running command for processing audio")
+                    logger.info("running command for processing audio")
                     self.insert_buf_audio()
                     tmp_file_list.append(self._get_tmp_filename("audio"))
-            if self.verbose:
-                logger.info("running command for merging video/audio")
+            logger.info("running command for merging video/audio")
             self.merge_audio_video()
         except Exception as e:
             logger.error(f"error running processing: {e}")

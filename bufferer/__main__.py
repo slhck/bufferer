@@ -92,7 +92,6 @@ def main():
         vcodec=arguments["--vcodec"],
         acodec=arguments["--acodec"],
         pixfmt=arguments["--pixfmt"],
-        verbose=arguments["--verbose"],
         brightness=arguments["--brightness"],
         blur=arguments["--blur"],
         audio_disable=arguments["--audio-disable"],

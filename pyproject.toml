@@ -1,6 +1,6 @@
 [project]
 name = "bufferer"
-version = "0.22.1"
+version = "0.22.2"
 description = "Insert fake buffering events into video files."
 readme = "README.md"
 requires-python = ">=3.9"

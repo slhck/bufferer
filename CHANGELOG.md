@@ -1,6 +1,21 @@
 # Changelog
 
 
+## v0.22.2 (2025-09-01)
+
+* Bump version to 0.22.2.
+
+* Migrate to uv and modern package structure.
+
+* Set python_requires to >=3.9.
+
+* Removed wheel settings from setup.cfg.
+
+* Add mypy settings.
+
+* Remove stalebot.
+
+
 ## v0.22.1 (2023-01-08)
 
 * Add py.typed support.

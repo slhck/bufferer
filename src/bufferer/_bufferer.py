@@ -85,14 +85,25 @@ class Bufferer:
                 self.buflist = json.loads(buflist)
                 if not isinstance(self.buflist[0], list):
                     self.buflist = [self.buflist]
-            except Exception:
+            except json.JSONDecodeError as e:
                 buflist_mod = "[" + buflist + "]"
                 try:
                     self.buflist = json.loads(buflist_mod)
-                except Exception:
+                except json.JSONDecodeError:
                     raise RuntimeError(
-                        "Buffering list parameter not properly formatted. Use a list like [[0, 1], [5, 10]]"
+                        f"Buffering list parameter not properly formatted.\n"
+                        f"  Received: {buflist!r}\n"
+                        f"  JSON error: {e.msg} at position {e.pos}\n"
+                        f"  Expected format: '[[0, 1], [5, 10]]' or '[0, 1], [5, 10]'\n"
+                        f"  where each pair is [position_in_seconds, duration_in_seconds]"
                     )
+            except (IndexError, TypeError):
+                raise RuntimeError(
+                    f"Buffering list parameter is empty or invalid.\n"
+                    f"  Received: {buflist!r}\n"
+                    f"  Expected format: '[[0, 1], [5, 10]]' or '[0, 1], [5, 10]'\n"
+                    f"  where each pair is [position_in_seconds, duration_in_seconds]"
+                )
         else:
             self.buflist = buflist
 

@@ -45,6 +45,7 @@ Usage:
 
 import logging
 import os
+import shutil
 import sys
 
 from docopt import docopt
@@ -71,11 +72,30 @@ def setup_logger(level: int = logging.INFO) -> logging.Logger:
 def main():
     arguments = docopt(__doc__, version=str(__version__))
 
+    # Check FFmpeg is available
+    if not shutil.which("ffmpeg"):
+        print(
+            "Error: ffmpeg not found. Please install FFmpeg and ensure it's in your PATH.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
     if not os.path.isfile(arguments["--input"]):
         raise IOError("Input file does not exist")
 
     if not arguments["--buflist"]:
         raise RuntimeError("No buffering list given, please specify --buflist")
+
+    # Check spinner file exists (unless disabled)
+    if not arguments["--disable-spinner"] and not arguments["--skipping"]:
+        spinner_path = arguments["--spinner"]
+        if not os.path.isfile(spinner_path):
+            print(f"Error: Spinner file not found: {spinner_path}", file=sys.stderr)
+            print(
+                "Use --disable-spinner to run without a spinner, or provide a valid spinner path with --spinner",
+                file=sys.stderr,
+            )
+            sys.exit(1)
 
     logger = setup_logger(logging.DEBUG if arguments["--verbose"] else logging.INFO)
 

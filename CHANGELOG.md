@@ -1,3 +1,12 @@
+## [0.24.1] - 2026-01-13
+
+### 🐛 Bug Fixes
+
+- Skip input validation in dry run
+
+### ⚙️ Miscellaneous Tasks
+
+- Bump version to 0.24.1
 ## [0.24.0] - 2026-01-13
 
 ### 🚀 Features

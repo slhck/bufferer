@@ -4,7 +4,7 @@ requires-python = ">=3.9"
 
 [[package]]
 name = "bufferer"
-version = "0.24.0"
+version = "0.24.1"
 source = { editable = "." }
 dependencies = [
     { name = "docopt" },

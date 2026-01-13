@@ -17,6 +17,7 @@ Usage:
                 [--black-frame]
                 [--force-framerate]
                 [--skipping]
+                [--ffmpeg-path <ffmpeg>]
                 [--verbose] [--version]
 
     -h --help                     show help message
@@ -39,6 +40,7 @@ Usage:
     --audio-disable               disable audio for the output, even if input contains audio
     --force-framerate             force output framerate to be the same as the input video file
     --skipping                    insert frame freezes with skipping (without indicator) at the <buflist> locations and durations
+    --ffmpeg-path <ffmpeg>        path to ffmpeg executable [default: ffmpeg]
     --verbose                     show verbose output
     --version                     show version
 """
@@ -72,10 +74,12 @@ def setup_logger(level: int = logging.INFO) -> logging.Logger:
 def main():
     arguments = docopt(__doc__, version=str(__version__))
 
+    ffmpeg_path = arguments["--ffmpeg-path"]
+
     # Check FFmpeg is available
-    if not shutil.which("ffmpeg"):
+    if not shutil.which(ffmpeg_path):
         print(
-            "Error: ffmpeg not found. Please install FFmpeg and ensure it's in your PATH.",
+            f"Error: ffmpeg not found at '{ffmpeg_path}'. Please install FFmpeg and ensure it's in your PATH.",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -118,6 +122,7 @@ def main():
         black_frame=arguments["--black-frame"],
         force_framerate=arguments["--force-framerate"],
         skipping=arguments["--skipping"],
+        ffmpeg_path=ffmpeg_path,
     )
 
     try:

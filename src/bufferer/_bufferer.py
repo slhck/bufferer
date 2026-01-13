@@ -35,6 +35,7 @@ class Bufferer:
         black_frame (bool, optional): Add black frame at the end. Defaults to False.
         force_framerate (bool, optional): Force framerate. Defaults to False.
         skipping (bool, optional): Enable skipping. Defaults to False.
+        ffmpeg_path (str, optional): Path to ffmpeg executable. Defaults to "ffmpeg".
 
     Raises:
         RuntimeError: Buffering list parameter not properly formatted. Use a list like [[0, 1], [5, 10]]
@@ -60,6 +61,7 @@ class Bufferer:
         black_frame: bool = False,
         force_framerate: bool = False,
         skipping: bool = False,
+        ffmpeg_path: str = "ffmpeg",
     ):
         # assign arguments from commandline
         self.input_file = input_file
@@ -79,6 +81,7 @@ class Bufferer:
         self.black_frame = black_frame
         self.force_framerate = force_framerate
         self.skipping = skipping
+        self.ffmpeg_path = ffmpeg_path
 
         if isinstance(buflist, str):
             try:
@@ -150,7 +153,7 @@ class Bufferer:
         """
 
         p = subprocess.Popen(
-            ["ffmpeg", "-i", self.input_file],
+            [self.ffmpeg_path, "-i", self.input_file],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
@@ -349,7 +352,7 @@ class Bufferer:
         Remove frames after the frozen, repeated, ones to emulate freezing with skipping
         """
         trim_extra_frames = [
-            "ffmpeg",
+            self.ffmpeg_path,
             self.overwrite_spec,
         ]
 
@@ -433,7 +436,7 @@ class Bufferer:
                 output_codec_options = ["-c", "copy"]
 
         combine_cmd = [
-            "ffmpeg",
+            self.ffmpeg_path,
             self.overwrite_spec,
         ]
 
@@ -492,7 +495,7 @@ class Bufferer:
         Get the base command to build the ffmpeg command
         """
         base_cmd = [
-            "ffmpeg",
+            self.ffmpeg_path,
             "-nostdin",
             "-threads",
             "1",

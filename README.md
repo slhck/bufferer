@@ -61,6 +61,7 @@ bufferer    [-hfne] -i <input> -b <buflist> -o <output>
             [--black-frame]
             [--force-framerate]
             [--skipping]
+            [--ffmpeg-path <ffmpeg>]
             [--verbose] [--version]
 
 -h --help                     show help message
@@ -83,6 +84,7 @@ bufferer    [-hfne] -i <input> -b <buflist> -o <output>
 --audio-disable               disable audio for the output, even if input contains audio
 --force-framerate             force output framerate to be the same as the input video file
 --skipping                    insert frame freezes with skipping (without indicator) at the <buflist> locations and durations
+--ffmpeg-path <ffmpeg>        path to ffmpeg executable [default: ffmpeg]
 --verbose                     show verbose output
 --version                     show version
 ```

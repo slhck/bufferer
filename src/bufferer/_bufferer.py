@@ -120,8 +120,20 @@ class Bufferer:
         self.video_resolution: str | None = None
         self.input_duration: str | None = None
 
-        # get info needed for processing
-        self._parse_input()
+        # get info needed for processing (skip in dry mode to avoid running ffmpeg)
+        if self.dry:
+            logger.warning(
+                "Dry run: skipping input file parsing. "
+                "Commands shown will use placeholder values."
+            )
+            self.has_video = True
+            self.has_audio = not self.audio_disable
+            self.fps = 30.0
+            self.samplerate = 48000.0
+            self.video_resolution = "1920x1080"
+            self.input_duration = "00:00:10.000"
+        else:
+            self._parse_input()
 
     def run_command(self, cmd: list[str]) -> Optional[str]:
         """

@@ -578,4 +578,4 @@ class Bufferer:
                     if os.path.isfile(file):
                         os.remove(file)
                     else:
-                        logger.warn(f"temporary file {file} not found!")
+                        logger.warning(f"temporary file {file} not found!")

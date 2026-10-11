@@ -128,7 +128,8 @@ def main():
     try:
         b.insert_buf_audiovisual()
     except Exception as e:
-        raise RuntimeError("Error while converting: " + str(e))
+        logger.error(f"Error while converting: {e}")
+        sys.exit(1)
 
     logger.info("Output written to " + b.output_file)
 

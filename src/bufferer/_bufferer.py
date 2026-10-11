@@ -573,8 +573,6 @@ class Bufferer:
                     tmp_file_list.append(self._get_tmp_filename("audio"))
             logger.info("running command for merging video/audio")
             self.merge_audio_video()
-        except Exception as e:
-            logger.error(f"error running processing: {e}")
         finally:
             if not self.dry:
                 for file in tmp_file_list:

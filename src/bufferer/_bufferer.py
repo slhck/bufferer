@@ -338,7 +338,9 @@ class Bufferer:
 
         base_cmd.extend(["-filter_complex", ";".join(filters)])
         base_cmd.extend(["-map", "[outv]"])
-        base_cmd.extend(["-c:v", self.vcodec, "-pix_fmt", self.pixfmt, "-vsync", "cfr"])
+        base_cmd.extend(
+            ["-c:v", self.vcodec, "-pix_fmt", self.pixfmt, "-fps_mode", "cfr"]
+        )
         base_cmd.append(self._get_tmp_filename("video"))
 
         self.run_command(base_cmd)
@@ -397,7 +399,7 @@ class Bufferer:
             [
                 "-c:v",
                 self.vcodec,
-                "-vsync",
+                "-fps_mode",
                 "cfr",
                 self._get_tmp_filename("skipping"),
             ]

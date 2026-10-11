@@ -3,7 +3,7 @@ name = "bufferer"
 version = "0.24.2"
 description = "Insert fake buffering events into video files."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = "MIT"
 license-files = ["LICENSE.md"]
 authors = [
@@ -14,12 +14,12 @@ classifiers = [
     "Intended Audience :: Developers",
     "Topic :: Multimedia :: Video",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
 ]
 dependencies = [
     "docopt",

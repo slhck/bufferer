@@ -244,7 +244,8 @@ class Bufferer:
                 # FIXME: the number of frames needs to be 1 shorter?
                 buf_len_frames = int(self.fps * buf_len)
 
-                loop_cmd = f"loop=loop={buf_len_frames}:size=1:start={buf_pos_frames},setpts=N/FRAME_RATE/TB"
+                # FRAME_RATE is undefined after chained loop filters in ffmpeg 7.1, so use the input frame rate
+                loop_cmd = f"loop=loop={buf_len_frames}:size=1:start={buf_pos_frames},setpts=N/{self.fps}/TB"
                 vloop_cmds.append(loop_cmd)
 
                 total_vlooped += buf_len_frames

@@ -1,3 +1,20 @@
+## [0.24.3] - 2026-10-11
+
+### 🐛 Bug Fixes
+
+- Replace -vsync with -fps_mode
+- Keep frames when inserting several buffering events
+- Exit with an error when an ffmpeg command fails
+- *(deps)* Update dependencies with known vulnerabilities
+
+### 📚 Documentation
+
+- *(readme)* Add centered project icon
+
+### ⚙️ Miscellaneous Tasks
+
+- Require Python 3.10 and support Python 3.15
+- Bump version to 0.24.3
 ## [0.24.2] - 2026-03-30
 
 ### ⚙️ Miscellaneous Tasks
